@@ -1,0 +1,50 @@
+{
+  "name": "promisefilter",
+  "version": "1.0.0",
+  "description": "An asynchronous Crossfilter wrapper",
+  "main": "./src/promisefilter.js",
+  "scripts": {
+    "test": "vows"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crossfilter/promisefilter.git"
+  },
+  "keywords": [
+    "crossfilter",
+    "promise",
+    "asynchonous",
+    "webworker"
+  ],
+  "author": "Ethan Jewett <ethan.jewett@coredatra.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/crossfilter/promisefilter/issues"
+  },
+  "homepage": "https://github.com/crossfilter/promisefilter#readme",
+  "dependencies": {
+    "crossfilter2": "^2.0.0-alpha.3",
+    "operative": "^0.4.4"
+  },
+  "devDependencies": {
+    "browserify": "^12.0.1",
+    "browserify-shim": "^3.8.11",
+    "gulp": "^3.9.0",
+    "gulp-karma": "0.0.5",
+    "gulp-rename": "^1.2.2",
+    "gulp-streamify": "^1.0.2",
+    "gulp-uglify": "^1.4.2",
+    "jasmine-core": "^2.3.4",
+    "karma": "^0.13.15",
+    "karma-chrome-launcher": "^0.2.1",
+    "karma-firefox-launcher": "^0.1.6",
+    "karma-jasmine": "^0.3.6",
+    "karma-phantomjs-launcher": "^0.2.1",
+    "phantomjs": "^1.9.18",
+    "vinyl-source-stream": "^1.1.0",
+    "webworker-threads": "^0.6.2"
+  },
+  "browserify-shim": {
+    "operative": "global:operative"
+  }
+}
