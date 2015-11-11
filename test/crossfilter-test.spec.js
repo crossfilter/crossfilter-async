@@ -6,6 +6,13 @@ var assert = {
         expect(aResult).toEqual(bResult);
       })
     })
+  },
+  deepEqual: function(a, b) {
+    Promise.resolve(a).then(function(aResult) {
+      Promise.resolve(b).then(function(bResult) {
+        expect(aResult).toEqual(bResult);
+      })
+    })
   }
 }
 
@@ -113,163 +120,164 @@ describe("promisefilter", function() {
         });
       });
 
-    //   describe("dimension", function() {
+      describe("dimension", function() {
 
-    //     describe("groupAll (count, the default)", function() {
-    //       beforeEach(function() {
-    //         data.quantity.count = data.quantity.groupAll();
-    //       });
-    //       it("value", function() {
-    //         assert.equal(data.quantity.count.value(), 0);
-    //       });
-    //       it("value after removing all data", function() {
-    //         try {
-    //           data.add([{quantity: 2, total: 190}]);
-    //           assert.equal(data.quantity.count.value(), 1);
-    //         } finally {
-    //           data.remove();
-    //           assert.equal(data.quantity.count.value(), 0);
-    //         }
-    //       });
-    //     });
+        describe("groupAll (count, the default)", function() {
+          beforeEach(function() {
+            data.quantity.count = data.quantity.groupAll();
+          });
+          it("value", function() {
+            assert.equal(data.quantity.count.value(), 0);
+          });
+          it("value after removing all data", function() {
+            try {
+              data.add([{quantity: 2, total: 190}]);
+              assert.equal(data.quantity.count.value(), 1);
+            } finally {
+              data.remove();
+              assert.equal(data.quantity.count.value(), 0);
+            }
+          });
+        });
 
-    //     describe("groupAll (sum of total)", function() {
-    //       beforeEach(function() {
-    //         data.quantity.total = data.quantity.groupAll().reduceSum(function(d) { return d.total; });
-    //       });
-    //       it("value", function() {
-    //         assert.equal(data.quantity.total.value(), 0);
-    //       });
-    //       it("value after removing all data", function() {
-    //         try {
-    //           data.add([{quantity: 2, total: 190}]);
-    //           assert.equal(data.quantity.total.value(), 190);
-    //         } finally {
-    //           data.remove();
-    //           assert.equal(data.quantity.total.value(), 0);
-    //         }
-    //       });
-    //     });
+        describe("groupAll (sum of total)", function() {
+          beforeEach(function() {
+            data.quantity.total = data.quantity.groupAll().reduceSum(function(d) { return d.total; });
+          });
+          it("value", function() {
+            assert.equal(data.quantity.total.value(), 0);
+          });
+          it("value after removing all data", function() {
+            try {
+              data.add([{quantity: 2, total: 190}]);
+              assert.equal(data.quantity.total.value(), 190);
+            } finally {
+              data.remove();
+              assert.equal(data.quantity.total.value(), 0);
+            }
+          });
+        });
 
-    //     describe("groupAll (custom reduce)", function() {
-    //       beforeEach(function() {
-    //         data.quantity.custom = data.quantity.groupAll().reduce(add, remove, initial);
-    //         function add(p, v) { return p + 1; }
-    //         function remove(p, v) { return p - 1; }
-    //         function initial() { return 1; }
-    //       });
-    //       it("value", function() {
-    //         assert.equal(data.quantity.custom.value(), 1);
-    //       });
-    //       it("value after removing all data", function() {
-    //         try {
-    //           data.add([{quantity: 2, total: 190}]);
-    //           assert.equal(data.quantity.custom.value(), 2);
-    //         } finally {
-    //           data.remove();
-    //           assert.equal(data.quantity.custom.value(), 1);
-    //         }
-    //       });
-    //     });
+        describe("groupAll (custom reduce)", function() {
+          beforeEach(function() {
+            data.quantity.custom = data.quantity.groupAll().reduce(add, remove, initial);
+            function add(p, v) { return p + 1; }
+            function remove(p, v) { return p - 1; }
+            function initial() { return 1; }
+          });
+          it("value", function() {
+            assert.equal(data.quantity.custom.value(), 1);
+          });
+          it("value after removing all data", function() {
+            try {
+              data.add([{quantity: 2, total: 190}]);
+              assert.equal(data.quantity.custom.value(), 2);
+            } finally {
+              data.remove();
+              assert.equal(data.quantity.custom.value(), 1);
+            }
+          });
+        });
 
-    //     describe("groupAll (custom reduce information lifecycle)", function() {
-    //       beforeEach(function() {
-    //         var data = promisefilter();
-    //         data.add([{foo: 1, val: 2}, {foo: 2, val: 2}, {foo: 3, val: 2}, {foo: 3, val: 2}]);
-    //         data.foo = data.dimension(function(d) { return d.foo; });
-    //         data.bar = data.dimension(function(d) { return d.foo; });
-    //         data.val = data.dimension(function(d) { return d.val; });
-    //         data.groupMax = data.bar.groupAll().reduce(function(p,v,n){
-    //           if(n) {
-    //             p += v.val;
-    //           }
-    //           return p;
-    //         }, function(p,v,n) {
-    //           if(n) {
-    //             p -= v.val;
-    //           }
-    //           return p;
-    //         }, function() {
-    //           return 0;
-    //         });
-    //         data.groupSum = data.bar.groupAll().reduceSum(function(d) { return d.val; });
-    //       });
-    //       it("on group creation", function() {
-    //         assert.deepEqual(data.groupMax.value(), data.groupSum.value());
-    //       });
-    //       it("on filtering", function() {
-    //         data.foo.filterRange([1, 3]);
-    //         assert.deepEqual(data.groupMax.value(), 8);
-    //         assert.deepEqual(data.groupSum.value(), 4);
-    //         data.foo.filterAll();
-    //       });
-    //       it("on adding data after group creation", function() {
-    //         data.add([{foo: 1, val: 2}]);
-    //         assert.deepEqual(data.groupMax.value(), data.groupSum.value());
-    //       });
-    //       it("on adding data when a filter is in place", function() {
-    //         data.foo.filterRange([1,3]);
-    //         data.add([{foo: 3, val: 1}]);
-    //         assert.deepEqual(data.groupMax.value(), 11);
-    //         assert.deepEqual(data.groupSum.value(), 6);
-    //         data.foo.filterAll();
-    //       });
-    //       it("on removing data after group creation", function() {
-    //         data.val.filter(1);
-    //         data.remove();
-    //         assert.deepEqual(data.groupMax.value(), 10);
-    //         assert.deepEqual(data.groupSum.value(), 0);
+        describe("groupAll (custom reduce information lifecycle)", function() {
+          var data;
+          beforeEach(function() {
+            data = promisefilter();
+            data.add([{foo: 1, val: 2}, {foo: 2, val: 2}, {foo: 3, val: 2}, {foo: 3, val: 2}]);
+            data.foo = data.dimension(function(d) { return d.foo; });
+            data.bar = data.dimension(function(d) { return d.foo; });
+            data.val = data.dimension(function(d) { return d.val; });
+            data.groupMax = data.bar.groupAll().reduce(function(p,v,n){
+              if(n) {
+                p += v.val;
+              }
+              return p;
+            }, function(p,v,n) {
+              if(n) {
+                p -= v.val;
+              }
+              return p;
+            }, function() {
+              return 0;
+            });
+            data.groupSum = data.bar.groupAll().reduceSum(function(d) { return d.val; });
+          });
+          it("on group creation", function() {
+            assert.deepEqual(data.groupMax.value(), data.groupSum.value());
+          });
+          it("on filtering", function() {
+            data.foo.filterRange([1, 3]);
+            assert.deepEqual(data.groupMax.value(), 8);
+            assert.deepEqual(data.groupSum.value(), 4);
+            data.foo.filterAll();
+          });
+          it("on adding data after group creation", function() {
+            data.add([{foo: 1, val: 2}]);
+            assert.deepEqual(data.groupMax.value(), data.groupSum.value());
+          });
+          it("on adding data when a filter is in place", function() {
+            data.foo.filterRange([1,3]);
+            data.add([{foo: 3, val: 1}]);
+            assert.deepEqual(data.groupMax.value(), 11);
+            assert.deepEqual(data.groupSum.value(), 6);
+            data.foo.filterAll();
+          });
+          it("on removing data after group creation", function() {
+            data.val.filter(1);
+            data.remove();
+            assert.deepEqual(data.groupMax.value(), 10);
+            assert.deepEqual(data.groupSum.value(), 0);
 
-    //         data.val.filterAll();
-    //         assert.deepEqual(data.groupMax.value(), data.groupSum.value());
-    //       });
-    //     });
-    //   });
-    // });
-
-    // it("up to 64 dimensions supported", function() {
-    //   var data = promisefilter([]);
-    //   for (var i = 0; i < 64; i++) data.dimension(function() { return 0; });
-    // });
-
-    // it("can add and remove 64 dimensions repeatedly", function() {
-    //   var data = promisefilter([]),
-    //       dimensions = [];
-    //   for (var j = 0; j < 10; j++) {
-    //     for (var i = 0; i < 64; i++) dimensions.push(data.dimension(function() { return 0; }));
-    //     while (dimensions.length) dimensions.pop().remove();
-    //   }
-    // });
-
-    // it("filtering with more than 32 dimensions", function() {
-    //   var data = promisefilter();
-    //   var dims = {};
-
-    //   for (var i = 0; i < 50; i++) {
-    //     data.add([{value: i}]);
-    //   }
-
-    //   var dimfunc = function(i) {
-    //     return function(val) {
-    //       return val.value == i;
-    //     }
-    //   }
-
-    //   for (var i = 0; i < 50; i++) {
-    //     dims[i] = data.dimension(dimfunc(i));
-    //   }
-
-    //   for (var i = 0; i < 50; i++) {
-    //     dims[i].filter(1);
-    //     data.remove();
-    //     dims[i].filterAll();
-    //     assert.equal(data.size(), 49 - i);
-    //   }
+            data.val.filterAll();
+            assert.deepEqual(data.groupMax.value(), data.groupSum.value());
+          });
+        });
+      });
     });
 
-    // describe("dimension", function() {
+    it("up to 64 dimensions supported", function() {
+      var data = promisefilter([]);
+      for (var i = 0; i < 64; i++) data.dimension(function() { return 0; });
+    });
 
-    //   describe("top", function() {
+    it("can add and remove 64 dimensions repeatedly", function() {
+      var data = promisefilter([]),
+          dimensions = [];
+      for (var j = 0; j < 10; j++) {
+        for (var i = 0; i < 64; i++) dimensions.push(data.dimension(function() { return 0; }));
+        while (dimensions.length) dimensions.pop().dispose();
+      }
+    });
+
+    it("filtering with more than 32 dimensions", function() {
+      var data = promisefilter();
+      var dims = {};
+
+      for (var i = 0; i < 50; i++) {
+        data.add([{value: i}]);
+      }
+
+      var dimfunc = function(i) {
+        return function(val) {
+          return val.value == i;
+        }
+      }
+
+      for (var i = 0; i < 50; i++) {
+        dims[i] = data.dimension(dimfunc(i));
+      }
+
+      for (var i = 0; i < 50; i++) {
+        dims[i].filter(1);
+        data.remove();
+        dims[i].filterAll();
+        assert.equal(data.size(), 49 - i);
+      }
+    });
+
+    describe("dimension", function() {
+
+      describe("top", function() {
     //     it("returns the top k records by value, in descending order", function() {
     //       assert.deepEqual(data.total.top(3), [
     //         {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"},
@@ -356,7 +364,7 @@ describe("promisefilter", function() {
     //       assert.deepEqual(data.date.top(NaN), []);
     //       assert.deepEqual(data.date.top(-Infinity), []);
     //     });
-    //   });
+      });
 
     //   describe("bottom", function() {
     //     it("returns the bottom k records by value, in descending order", function() {
@@ -678,7 +686,7 @@ describe("promisefilter", function() {
     //         assert.isFalse(callback);
     //       });
     //     });
-    //   });
+      });
 
     //   describe("groupAll (sum of total)", function() {
     //     beforeEach(function() {
