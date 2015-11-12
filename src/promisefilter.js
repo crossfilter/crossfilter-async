@@ -1,5 +1,4 @@
 var operative = require('operative');
-var crossfilter = require('crossfilter2');
 
 var opfilter = operative({
 	"crossfilters": {},
