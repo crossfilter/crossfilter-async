@@ -1583,6 +1583,8 @@ var opfilter = operative({
 	"groupAllIndex": 0,
 	"dimensionGroupAlls": {},
 	"dimensionGroupAllIndex": 0,
+	"dimensionGroups": {},
+	"dimensionGroupIndex": 0,
 	"new": function(data) {
 		this.crossfilters[this.crossfilterIndex] = crossfilter(data);
 		var oldIndex = this.crossfilterIndex;
@@ -1613,12 +1615,28 @@ var opfilter = operative({
 		this.dimensionGroupAlls[index].reduceSum(accessor);
 		this.deferred().fulfill();
 	},
+	"dimension.groupAll.reduceCount": function(index) {
+		this.dimensionGroupAlls[index].reduceCount();
+		this.deferred().fulfill();
+	},
 	"dimension.groupAll.reduce": function(index, add, remove,initial) {
 		this.dimensionGroupAlls[index].reduce(add, remove, initial);
 		this.deferred().fulfill();
 	},
+	"dimension.groupAll.dispose": function(index) {
+		this.dimensionGroupAlls[index].dispose();
+		this.deferred().fulfill();
+	},
 	"dimension.filterRange": function(index, range) {
 		this.dimensions[index].filterRange(range);
+		this.deferred().fulfill();
+	},
+	"dimension.filterExact": function(index, value) {
+		this.dimensions[index].filterExact(value);
+		this.deferred().fulfill();
+	},
+	"dimension.filterFunction": function(index, func) {
+		this.dimensions[index].filterFunction(func);
 		this.deferred().fulfill();
 	},
 	"dimension.filterAll": function(index) {
@@ -1627,6 +1645,56 @@ var opfilter = operative({
 	},
 	"dimension.filter": function(index, value) {
 		this.dimensions[index].filter(value);
+		this.deferred().fulfill();
+	},
+	"dimension.top": function(index, value) {
+		var top = this.dimensions[index].top(value);
+		this.deferred().fulfill(top);
+	},
+	"dimension.bottom": function(index, value) {
+		var bottom = this.dimensions[index].bottom(value);
+		this.deferred().fulfill(bottom);
+	},
+	"dimension.group": function(index, accessor) {
+		this.dimensionGroups[this.dimensionGroupIndex] = this.dimensions[index].group(accessor);
+		var oldIndex = this.dimensionGroupIndex;
+		this.dimensionGroupIndex++;
+		this.deferred().fulfill(oldIndex);
+	},
+	"dimension.group.top": function(index, value) {
+		var top = this.dimensionGroups[index].top(value);
+		this.deferred().fulfill(top);
+	},
+	"dimension.group.all": function(index) {
+		var all = this.dimensionGroups[index].all();
+		this.deferred().fulfill(all);
+	},
+	"dimension.group.size": function(index) {
+		var size = this.dimensionGroups[index].size();
+		this.deferred().fulfill(size);	
+	},
+	"dimension.group.reduce": function(index, add, remove,initial) {
+		this.dimensionGroups[index].reduce(add, remove, initial);
+		this.deferred().fulfill();
+	},
+	"dimension.group.order": function(index, accessor) {
+		this.dimensionGroups[index].order(accessor);
+		this.deferred().fulfill();
+	},
+	"dimension.group.orderNatural": function(index) {
+		this.dimensionGroups[index].orderNatural();
+		this.deferred().fulfill();
+	},
+	"dimension.group.reduceSum": function(index, accessor) {
+		this.dimensionGroups[index].reduceSum(accessor);
+		this.deferred().fulfill();
+	},
+	"dimension.group.reduceCount": function(index) {
+		this.dimensionGroups[index].reduceCount();
+		this.deferred().fulfill();
+	},
+	"dimension.group.dispose": function(index) {
+		this.dimensionGroups[index].dispose();
 		this.deferred().fulfill();
 	},
 	"groupAll": function(index) {
@@ -1639,6 +1707,22 @@ var opfilter = operative({
 		var value = this.groupAlls[index].value();
 		this.deferred().fulfill(value);
 	},
+	"groupAll.reduceSum": function(index, accessor) {
+		this.groupAlls[index].reduceSum(accessor);
+		this.deferred().fulfill();
+	},
+	"groupAll.reduceCount": function(index) {
+		this.groupAlls[index].reduceCount();
+		this.deferred().fulfill();
+	},
+	"groupAll.reduce": function(index, add, remove,initial) {
+		this.groupAlls[index].reduce(add, remove, initial);
+		this.deferred().fulfill();
+	},
+	"groupAll.dispose": function(index) {
+		this.groupAlls[index].dispose();
+		this.deferred().fulfill();
+	},
 	"add": function(index, data) {
 		this.crossfilters[index].add(data);
 		this.deferred().fulfill();
@@ -1646,6 +1730,10 @@ var opfilter = operative({
 	"size": function(index) {
 		var size = this.crossfilters[index].size();
 		this.deferred().fulfill(size);
+	},
+	"all": function(index) {
+		var all = this.crossfilters[index].all();
+		this.deferred().fulfill(all);
 	}
 }, ['./node_modules/crossfilter2/crossfilter.min.js']);
 
@@ -1669,20 +1757,76 @@ var cfFacade = function(data) {
 							opfilter["dimension.groupAll.reduceSum"](dimGaIndex, accessor);
 							return this;
 						},
+						reduceCount: function() {
+							opfilter["dimension.groupAll.reduceCount"](dimGaIndex);
+							return this;
+						},
 						reduce: function(add, remove, initial) {
 							opfilter["dimension.groupAll.reduce"](dimGaIndex, add, remove, initial);
 							return this;
+						},
+						dispose: function() {
+							return opfilter["dimension.groupAll.dispose"](dimGaIndex);
 						}
 					}
 				},
+				group: function(accessor) {
+					var dimGroupIndex = opfilter["dimension.group"](dimIndex, accessor);
+					return {
+						top: function(value) {
+							return opfilter["dimension.group.top"](dimGroupIndex, value);
+						},
+						all: function() {
+							return opfilter["dimension.group.all"](dimGroupIndex);
+						},
+						size: function() {
+							return opfilter["dimension.group.size"](dimGroupIndex);
+						},
+						reduceSum: function(accessor) {
+							opfilter["dimension.group.reduceSum"](dimGroupIndex, accessor);
+							return this;
+						},
+						reduceCount: function() {
+							opfilter["dimension.group.reduceCount"](dimGroupIndex);
+							return this;
+						},
+						reduce: function(add, remove, initial) {
+							opfilter["dimension.group.reduce"](dimGroupIndex, add, remove, initial);
+							return this;
+						},
+						order: function(accessor) {
+							opfilter["dimension.group.order"](dimGroupIndex, accessor);
+							return this;
+						},
+						orderNatural: function() {
+							opfilter["dimension.group.orderNatural"](dimGroupIndex);
+							return this;
+						},
+						dispose: function() {
+							return opfilter["dimension.group.dispose"](dimGroupIndex);
+						}
+					};
+				},
 				filterRange: function(range) {
 					return opfilter["dimension.filterRange"](dimIndex, range);
+				},
+				filterExact: function(value) {
+					return opfilter["dimension.filterExact"](dimIndex, value);
+				},
+				filterFunction: function(func) {
+					return opfilter["dimension.filterFunction"](dimIndex, func);
 				},
 				filterAll: function() {
 					return opfilter["dimension.filterAll"](dimIndex);
 				},
 				filter: function(value) {
 					return opfilter["dimension.filter"](dimIndex, value);
+				},
+				top: function(value) {
+					return opfilter["dimension.top"](dimIndex, value);
+				},
+				bottom: function(value) {
+					return opfilter["dimension.bottom"](dimIndex, value);
 				}
 			}	
 		},
@@ -1692,6 +1836,21 @@ var cfFacade = function(data) {
 			return {
 				value: function() {
 					return opfilter["groupAll.value"](gaIndex);
+				},
+				reduceSum: function(accessor) {
+					opfilter["groupAll.reduceSum"](gaIndex, accessor);
+					return this;
+				},
+				reduceCount: function() {
+					opfilter["groupAll.reduceCount"](gaIndex);
+					return this;
+				},
+				reduce: function(add, remove, initial) {
+					opfilter["groupAll.reduce"](gaIndex, add, remove, initial);
+					return this;
+				},
+				dispose: function() {
+					return opfilter["groupAll.dispose"](gaIndex);
 				}
 			}
 		},
@@ -1699,17 +1858,17 @@ var cfFacade = function(data) {
 			
 		},
 		add: function(data) {
-			return opfilter.add(cfIndex, data);
+			opfilter.add(cfIndex, data)
+			return this;
 		},
 		size: function() {
 			return opfilter.size(cfIndex);
+		},
+		all: function() {
+			return opfilter.all(cfIndex);
 		}
 	};
 }
-	
-
-cfFacade.bisect = crossfilter.bisect;
-cfFacade.heap = crossfilter.heap;
 
 module.exports = cfFacade;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})

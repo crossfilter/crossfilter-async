@@ -6,6 +6,7 @@ module.exports = function(config) {
 
     files: [
 		'node_modules/operative/dist/operative.js',
+		'node_modules/d3/d3.min.js',
 		'test/*.js'
     ],
 

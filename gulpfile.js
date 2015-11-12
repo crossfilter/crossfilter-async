@@ -12,6 +12,7 @@ var karma = require('gulp-karma');
 
 var testFiles = [
 	'node_modules/operative/dist/operative.js',
+	'node_modules/d3/d3.min.js',
 	'promisefilter.js',
 	'test/*.spec.js'
 ];
