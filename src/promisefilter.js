@@ -1,6 +1,31 @@
 var operative = require('operative');
 
+var cfUrl = '/base/node_modules/crossfilter2/crossfilter.js';
+
+// URL.createObjectURL
+// window.URL = window.URL || window.webkitURL;
+
+// var blob;
+// try {
+// 	blob = new Blob([function() {}.toString()], {type: 'application/javascript'});
+// } catch (e) { // Backwards-compatibility
+//     window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+//     blob = new BlobBuilder();
+//     blob.append(function() {}.toString());
+//     blob = blob.getBlob();
+// }
+// var cfUrl = URL.createObjectURL(blob);
+
 var opfilter = operative({
+	"unpack": function unpackFunction(func, context) {
+		var internal, evalStr = "";
+		if(context) {
+			evalStr += context;
+		}
+		evalStr += "internal = " + func;
+		eval(evalStr);
+		return internal;
+	},
 	"crossfilters": {},
 	"crossfilterIndex": 0,
 	"dimensions": {},
@@ -17,11 +42,12 @@ var opfilter = operative({
 		this.crossfilterIndex++;
 		this.deferred().fulfill(oldIndex);
 	},
-	"dimension": function(accessor) {
-		this.dimensions[this.dimensionIndex] = this.crossfilter.dimension(accessor);
+	"dimension": function(index, accessor) {
+		var promise = this.deferred();
+		this.dimensions[this.dimensionIndex] = this.crossfilters[index].dimension(this.unpack(accessor));
 		var oldIndex = this.dimensionIndex;
 		this.dimensionIndex++;
-		this.deferred().fulfill(oldIndex);
+		promise.fulfill(oldIndex);
 	},
 	"dimension.dispose": function(index) {
 		this.dimensions[index].dispose();
@@ -38,7 +64,7 @@ var opfilter = operative({
 		this.deferred().fulfill(value);
 	},
 	"dimension.groupAll.reduceSum": function(index, accessor) {
-		this.dimensionGroupAlls[index].reduceSum(accessor);
+		this.dimensionGroupAlls[index].reduceSum(this.unpack(accessor));
 		this.deferred().fulfill();
 	},
 	"dimension.groupAll.reduceCount": function(index) {
@@ -46,7 +72,7 @@ var opfilter = operative({
 		this.deferred().fulfill();
 	},
 	"dimension.groupAll.reduce": function(index, add, remove,initial) {
-		this.dimensionGroupAlls[index].reduce(add, remove, initial);
+		this.dimensionGroupAlls[index].reduce(this.unpack(add), this.unpack(remove), this.unpack(initial));
 		this.deferred().fulfill();
 	},
 	"dimension.groupAll.dispose": function(index) {
@@ -62,7 +88,7 @@ var opfilter = operative({
 		this.deferred().fulfill();
 	},
 	"dimension.filterFunction": function(index, func) {
-		this.dimensions[index].filterFunction(func);
+		this.dimensions[index].filterFunction(this.unpack(func));
 		this.deferred().fulfill();
 	},
 	"dimension.filterAll": function(index) {
@@ -82,7 +108,7 @@ var opfilter = operative({
 		this.deferred().fulfill(bottom);
 	},
 	"dimension.group": function(index, accessor) {
-		this.dimensionGroups[this.dimensionGroupIndex] = this.dimensions[index].group(accessor);
+		this.dimensionGroups[this.dimensionGroupIndex] = this.dimensions[index].group(this.unpack(accessor));
 		var oldIndex = this.dimensionGroupIndex;
 		this.dimensionGroupIndex++;
 		this.deferred().fulfill(oldIndex);
@@ -100,11 +126,11 @@ var opfilter = operative({
 		this.deferred().fulfill(size);	
 	},
 	"dimension.group.reduce": function(index, add, remove,initial) {
-		this.dimensionGroups[index].reduce(add, remove, initial);
+		this.dimensionGroups[index].reduce(this.unpack(add), this.unpack(remove), this.unpack(initial));
 		this.deferred().fulfill();
 	},
 	"dimension.group.order": function(index, accessor) {
-		this.dimensionGroups[index].order(accessor);
+		this.dimensionGroups[index].order(this.unpack(accessor));
 		this.deferred().fulfill();
 	},
 	"dimension.group.orderNatural": function(index) {
@@ -112,7 +138,7 @@ var opfilter = operative({
 		this.deferred().fulfill();
 	},
 	"dimension.group.reduceSum": function(index, accessor) {
-		this.dimensionGroups[index].reduceSum(accessor);
+		this.dimensionGroups[index].reduceSum(this.unpack(accessor));
 		this.deferred().fulfill();
 	},
 	"dimension.group.reduceCount": function(index) {
@@ -124,17 +150,18 @@ var opfilter = operative({
 		this.deferred().fulfill();
 	},
 	"groupAll": function(index) {
+		var promise = this.deferred();
 		this.groupAlls[this.groupAllIndex] = this.crossfilters[index].groupAll();
 		var oldIndex = this.groupAllIndex;
 		this.groupAllIndex++;
-		this.deferred().fulfill(oldIndex);
+		promise.fulfill(oldIndex);
 	},
 	"groupAll.value": function(index) {
 		var value = this.groupAlls[index].value();
 		this.deferred().fulfill(value);
 	},
 	"groupAll.reduceSum": function(index, accessor) {
-		this.groupAlls[index].reduceSum(accessor);
+		this.groupAlls[index].reduceSum(this.unpack(accessor));
 		this.deferred().fulfill();
 	},
 	"groupAll.reduceCount": function(index) {
@@ -142,7 +169,7 @@ var opfilter = operative({
 		this.deferred().fulfill();
 	},
 	"groupAll.reduce": function(index, add, remove,initial) {
-		this.groupAlls[index].reduce(add, remove, initial);
+		this.groupAlls[index].reduce(this.unpack(add), this.unpack(remove), this.unpack(initial));
 		this.deferred().fulfill();
 	},
 	"groupAll.dispose": function(index) {
@@ -160,27 +187,30 @@ var opfilter = operative({
 	"all": function(index) {
 		var all = this.crossfilters[index].all();
 		this.deferred().fulfill(all);
+	},
+	"remove": function(index) {
+		this.crossfilters[index].remove();
+		this.deferred().fulfill();
 	}
-}, ['./node_modules/crossfilter2/crossfilter.min.js']);
+}, [cfUrl]);
 
 var cfFacade = function(data) {
 	var cfIndex = opfilter.new(data);
 	return {
 		dimension: function(accessor) {
-			var dimIndex = opfilter.dimension(accessor);
-			
+			var dimIndex = cfIndex.then(function(idx) { return opfilter["dimension"](idx, accessor.toString()); });
 			return {
 				dispose: function() {
-					return opfilter["dimension.dispose"](dimIndex);
+					return dimIndex.then(function(idx) { return opfilter["dimension.dispose"](idx); })
 				},
 				groupAll: function() {
-					var dimGaIndex = opfilter["dimension.groupAll"](dimIndex);
+					var dimGaIndex = dimIndex.then(function(idx) { return opfilter["dimension.groupAll"](idx); });
 					return {
 						value: function() {
-							return opfilter["dimension.groupAll.value"](dimGaIndex);
+							return dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.value"](idx); });
 						},
 						reduceSum: function(accessor) {
-							opfilter["dimension.groupAll.reduceSum"](dimGaIndex, accessor);
+							opfilter["dimension.groupAll.reduceSum"](dimGaIndex, accessor.toString());
 							return this;
 						},
 						reduceCount: function() {
@@ -188,7 +218,7 @@ var cfFacade = function(data) {
 							return this;
 						},
 						reduce: function(add, remove, initial) {
-							opfilter["dimension.groupAll.reduce"](dimGaIndex, add, remove, initial);
+							opfilter["dimension.groupAll.reduce"](dimGaIndex, add.toString(), remove.toString(), initial.toString());
 							return this;
 						},
 						dispose: function() {
@@ -197,7 +227,7 @@ var cfFacade = function(data) {
 					}
 				},
 				group: function(accessor) {
-					var dimGroupIndex = opfilter["dimension.group"](dimIndex, accessor);
+					var dimGroupIndex = dimIndex.then(function(idx) { return opfilter["dimension.group"](idx, accessor.toString()); });
 					return {
 						top: function(value) {
 							return opfilter["dimension.group.top"](dimGroupIndex, value);
@@ -209,7 +239,7 @@ var cfFacade = function(data) {
 							return opfilter["dimension.group.size"](dimGroupIndex);
 						},
 						reduceSum: function(accessor) {
-							opfilter["dimension.group.reduceSum"](dimGroupIndex, accessor);
+							opfilter["dimension.group.reduceSum"](dimGroupIndex, accessor.toString());
 							return this;
 						},
 						reduceCount: function() {
@@ -217,11 +247,11 @@ var cfFacade = function(data) {
 							return this;
 						},
 						reduce: function(add, remove, initial) {
-							opfilter["dimension.group.reduce"](dimGroupIndex, add, remove, initial);
+							opfilter["dimension.group.reduce"](dimGroupIndex, add.toString(), remove.toString(), initial.toString());
 							return this;
 						},
 						order: function(accessor) {
-							opfilter["dimension.group.order"](dimGroupIndex, accessor);
+							opfilter["dimension.group.order"](dimGroupIndex, accessor.toString());
 							return this;
 						},
 						orderNatural: function() {
@@ -240,7 +270,7 @@ var cfFacade = function(data) {
 					return opfilter["dimension.filterExact"](dimIndex, value);
 				},
 				filterFunction: function(func) {
-					return opfilter["dimension.filterFunction"](dimIndex, func);
+					return opfilter["dimension.filterFunction"](dimIndex, func.toString());
 				},
 				filterAll: function() {
 					return opfilter["dimension.filterAll"](dimIndex);
@@ -257,43 +287,52 @@ var cfFacade = function(data) {
 			}	
 		},
 		groupAll: function() {
-			var gaIndex = opfilter.groupAll(cfIndex);
+			var gaIndex = cfIndex.then(function(idx) { return opfilter.groupAll(idx); });
 			
 			return {
 				value: function() {
-					return opfilter["groupAll.value"](gaIndex);
+					return gaIndex.then(function(idx) { return opfilter["groupAll.value"](idx); });
 				},
 				reduceSum: function(accessor) {
-					opfilter["groupAll.reduceSum"](gaIndex, accessor);
+					gaIndex.then(function(idx) { opfilter["groupAll.reduceSum"](idx, accessor.toString()); });
 					return this;
 				},
 				reduceCount: function() {
-					opfilter["groupAll.reduceCount"](gaIndex);
+					gaIndex.then(function(idx) { opfilter["groupAll.reduceCount"](idx); });
 					return this;
 				},
 				reduce: function(add, remove, initial) {
-					opfilter["groupAll.reduce"](gaIndex, add, remove, initial);
+					gaIndex.then(function(idx) { opfilter["groupAll.reduce"](idx, add.toString(), remove.toString(), initial.toString()) });;
 					return this;
 				},
 				dispose: function() {
-					return opfilter["groupAll.dispose"](gaIndex);
+					return gaIndex.then(function(idx) { return opfilter["groupAll.dispose"](idx); });
 				}
 			}
 		},
 		remove: function() {
-			
+			cfIndex.then(function(idx) { return opfilter.remove(idx); });
+			return this;
 		},
 		add: function(data) {
-			opfilter.add(cfIndex, data)
+			cfIndex.then(function(idx) { return opfilter.add(idx, data); });
 			return this;
 		},
 		size: function() {
-			return opfilter.size(cfIndex);
+			return cfIndex.then(function(idx) { return opfilter.size(cfIndex); });
 		},
 		all: function() {
-			return opfilter.all(cfIndex);
+			return cfIndex.then(function(idx) { return opfilter.all(cfIndex); });
 		}
 	};
 }
+
+// var testing = operative({
+// 	test: function() {
+// 		this.deferred().fulfill("TESTING TESTING - THIS IS A RESULT");
+// 	}
+// })
+// alert("TESTING TESTING 123");
+// testing.test().then(function(d) { alert(d); })
 
 module.exports = cfFacade;

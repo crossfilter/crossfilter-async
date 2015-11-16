@@ -29,6 +29,7 @@
   "devDependencies": {
     "browserify": "^12.0.1",
     "browserify-shim": "^3.8.11",
+    "crossfilter2": "^2.0.0-alpha.3",
     "d3": "^3.5.8",
     "gulp": "^3.9.0",
     "gulp-karma": "0.0.5",
@@ -46,6 +47,7 @@
     "webworker-threads": "^0.6.2"
   },
   "browserify-shim": {
-    "operative": "global:operative"
+    "operative": "global:operative",
+    "crossfilter2": "global:crossfilter"
   }
 }

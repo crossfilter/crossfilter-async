@@ -1,12 +1,14 @@
 module.exports = function(config) {
   config.set({
-    basePath: '.',
+    basePath: './',
 
     frameworks: ['jasmine'],
 
     files: [
 		'node_modules/operative/dist/operative.js',
+		'node_modules/crossfilter2/crossfilter.js',
 		'node_modules/d3/d3.min.js',
+		'promisefilter.js',
 		'test/*.js'
     ],
 
@@ -26,8 +28,6 @@ module.exports = function(config) {
 	],
 
 	reporters: ['dots'],
-
-	singleRun: true,
 
 	captureTimeout: 60000
   });

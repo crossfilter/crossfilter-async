@@ -9,10 +9,9 @@ var shim = require('browserify-shim');
 // var Gitdown = require('gitdown');
 // var bump = require('gulp-bump');
 var karma = require('gulp-karma');
+var Server = require('karma').Server;
 
 var testFiles = [
-	'node_modules/operative/dist/operative.js',
-	'node_modules/d3/d3.min.js',
 	'promisefilter.js',
 	'test/*.spec.js'
 ];
@@ -39,28 +38,35 @@ gulp.task('watch', function() {
     gulp.watch('./src/*.js', ['scripts']);
 });
 
-gulp.task('test', function () {
-	return gulp.src(testFiles)
-		.pipe(karma({
-		  configFile: 'karma.conf.js',
-		  action: 'run'
-		}))
-		.on('error', function(err) {
-		  // Make sure failed tests cause gulp to exit non-zero 
-		  throw err;
-		});
+gulp.task('test', function (done) {
+	new Server({
+		configFile: __dirname + '/karma.conf.js',
+		singleRun: true
+	}, done).start();
+	// return gulp.src(testFiles)
+	// 	.pipe(karma({
+	// 	  configFile: 'karma.conf.js',
+	// 	  action: 'run'
+	// 	}))
+	// 	.on('error', function(err) {
+	// 	  // Make sure failed tests cause gulp to exit non-zero 
+	// 	  throw err;
+	// 	});
 });
 
-gulp.task('testWatch', function () {
-	return gulp.src(testFiles)
-		.pipe(karma({
-		  configFile: 'karma.conf.js',
-		  action: 'watch'
-		}))
-		.on('error', function(err) {
-		  // Make sure failed tests cause gulp to exit non-zero 
-		  throw err;
-		});
+gulp.task('testWatch', function (done) {
+	new Server({
+		configFile: __dirname + '/karma.conf.js'
+	}, done).start();
+	// return gulp.src(testFiles)
+	// 	.pipe(karma({
+	// 	  configFile: 'karma.conf.js',
+	// 	  action: 'watch'
+	// 	}))
+	// 	.on('error', function(err) {
+	// 	  // Make sure failed tests cause gulp to exit non-zero 
+	// 	  throw err;
+	// 	});
 });
 
 gulp.task('default', ['scripts', 'testWatch', 'watch']);
