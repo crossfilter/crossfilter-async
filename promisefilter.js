@@ -39,7 +39,11 @@ var opfilter = operative({
 	"dimensionGroups": {},
 	"dimensionGroupIndex": 0,
 	"new": function(data) {
-		this.crossfilters[this.crossfilterIndex] = crossfilter(data);
+		if(data) {
+			this.crossfilters[this.crossfilterIndex] = crossfilter(data);	
+		} else {
+			this.crossfilters[this.crossfilterIndex] = crossfilter([]);
+		}
 		var oldIndex = this.crossfilterIndex;
 		this.crossfilterIndex++;
 		this.deferred().fulfill(oldIndex);
@@ -232,59 +236,59 @@ var cfFacade = function(data) {
 					var dimGroupIndex = dimIndex.then(function(idx) { return opfilter["dimension.group"](idx, accessor.toString()); });
 					return {
 						top: function(value) {
-							return opfilter["dimension.group.top"](dimGroupIndex, value);
+							return dimGroupIndex.then(function(idx) { return opfilter["dimension.group.top"](idx, value); });
 						},
 						all: function() {
-							return opfilter["dimension.group.all"](dimGroupIndex);
+							return dimGroupIndex.then(function(idx) { return opfilter["dimension.group.all"](idx); });
 						},
 						size: function() {
-							return opfilter["dimension.group.size"](dimGroupIndex);
+							return dimGroupIndex.then(function(idx) { return opfilter["dimension.group.size"](idx); });
 						},
 						reduceSum: function(accessor) {
-							opfilter["dimension.group.reduceSum"](dimGroupIndex, accessor.toString());
+							dimGroupIndex.then(function(idx) { return opfilter["dimension.group.reduceSum"](idx, accessor.toString()); });
 							return this;
 						},
 						reduceCount: function() {
-							opfilter["dimension.group.reduceCount"](dimGroupIndex);
+							dimGroupIndex.then(function(idx) { return opfilter["dimension.group.reduceCount"](idx); });
 							return this;
 						},
 						reduce: function(add, remove, initial) {
-							opfilter["dimension.group.reduce"](dimGroupIndex, add.toString(), remove.toString(), initial.toString());
+							dimGroupIndex.then(function(idx) { return opfilter["dimension.group.reduce"](idx, add.toString(), remove.toString(), initial.toString()); });
 							return this;
 						},
 						order: function(accessor) {
-							opfilter["dimension.group.order"](dimGroupIndex, accessor.toString());
+							dimGroupIndex.then(function(idx) { return opfilter["dimension.group.order"](idx, accessor.toString()); });
 							return this;
 						},
 						orderNatural: function() {
-							opfilter["dimension.group.orderNatural"](dimGroupIndex);
+							dimGroupIndex.then(function(idx) { return opfilter["dimension.group.orderNatural"](idx); });
 							return this;
 						},
 						dispose: function() {
-							return opfilter["dimension.group.dispose"](dimGroupIndex);
+							return dimGroupIndex.then(function(idx) { return opfilter["dimension.group.dispose"](idx); });
 						}
 					};
 				},
 				filterRange: function(range) {
-					return opfilter["dimension.filterRange"](dimIndex, range);
+					return dimIndex.then(function(idx) { return opfilter["dimension.filterRange"](idx, range); });
 				},
 				filterExact: function(value) {
-					return opfilter["dimension.filterExact"](dimIndex, value);
+					return dimIndex.then(function(idx) { return opfilter["dimension.filterExact"](idx, value); });
 				},
 				filterFunction: function(func) {
-					return opfilter["dimension.filterFunction"](dimIndex, func.toString());
+					return dimIndex.then(function(idx) { return opfilter["dimension.filterFunction"](idx, func.toString()); });
 				},
 				filterAll: function() {
-					return opfilter["dimension.filterAll"](dimIndex);
+					return dimIndex.then(function(idx) { return opfilter["dimension.filterAll"](idx); });
 				},
 				filter: function(value) {
-					return opfilter["dimension.filter"](dimIndex, value);
+					return dimIndex.then(function(idx) { return opfilter["dimension.filter"](idx, value); });
 				},
 				top: function(value) {
-					return opfilter["dimension.top"](dimIndex, value);
+					return dimIndex.then(function(idx) { return opfilter["dimension.top"](idx, value); });
 				},
 				bottom: function(value) {
-					return opfilter["dimension.bottom"](dimIndex, value);
+					return dimIndex.then(function(idx) { return opfilter["dimension.bottom"](idx, value); });
 				}
 			}	
 		},
@@ -321,10 +325,10 @@ var cfFacade = function(data) {
 			return this;
 		},
 		size: function() {
-			return cfIndex.then(function(idx) { return opfilter.size(cfIndex); });
+			return cfIndex.then(function(idx) { return opfilter.size(idx); });
 		},
 		all: function() {
-			return cfIndex.then(function(idx) { return opfilter.all(cfIndex); });
+			return cfIndex.then(function(idx) { return opfilter.all(idx); });
 		}
 	};
 }
