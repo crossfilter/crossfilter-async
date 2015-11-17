@@ -210,19 +210,19 @@ var cfFacade = function(data) {
 							return dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.value"](idx); });
 						},
 						reduceSum: function(accessor) {
-							opfilter["dimension.groupAll.reduceSum"](dimGaIndex, accessor.toString());
+							dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.reduceSum"](idx, accessor.toString()); });
 							return this;
 						},
 						reduceCount: function() {
-							opfilter["dimension.groupAll.reduceCount"](dimGaIndex);
+							dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.reduceCount"](idx); });
 							return this;
 						},
 						reduce: function(add, remove, initial) {
-							opfilter["dimension.groupAll.reduce"](dimGaIndex, add.toString(), remove.toString(), initial.toString());
+							dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.reduce"](idx, add.toString(), remove.toString(), initial.toString()); });
 							return this;
 						},
 						dispose: function() {
-							return opfilter["dimension.groupAll.dispose"](dimGaIndex);
+							return dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.dispose"](idx); });
 						}
 					}
 				},

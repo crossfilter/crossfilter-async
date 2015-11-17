@@ -154,41 +154,41 @@ describe("promisefilter", function() {
 
       describe("dimension", function() {
 
-        // describe("groupAll (count, the default)", function() {
-        //   beforeEach(function() {
-        //     data.quantity.count = data.quantity.groupAll();
-        //   });
-        //   it("value", function(done) {
-        //     assert.equal(data.quantity.count.value(), 0, done);
-        //   });
-        //   it("value after removing all data", function(done) {
-        //     try {
-        //       data.add([{quantity: 2, total: 190}]);
-        //       assert.equal(data.quantity.count.value(), 1, done);
-        //     } finally {
-        //       data.remove();
-        //       assert.equal(data.quantity.count.value(), 0, done);
-        //     }
-        //   });
-        // });
+        describe("groupAll (count, the default)", function() {
+          beforeEach(function() {
+            data.quantity.count = data.quantity.groupAll();
+          });
+          it("value", function(done) {
+            assert.equal(data.quantity.count.value(), 0, done);
+          });
+          it("value after adding data", function(done) {
+            data.add([{quantity: 2, total: 190}]);
+            assert.equal(data.quantity.count.value(), 1, done);
+          });
+          it("value after removing all data", function(done) {
+            data.add([{quantity: 2, total: 190}]);
+            data.remove();
+            assert.equal(data.quantity.count.value(), 0, done);
+          });
+        });
 
-      //   describe("groupAll (sum of total)", function() {
-      //     beforeEach(function() {
-      //       data.quantity.total = data.quantity.groupAll().reduceSum(function(d) { return d.total; });
-      //     });
-      //     it("value", function() {
-      //       assert.equal(data.quantity.total.value(), 0);
-      //     });
-      //     it("value after removing all data", function() {
-      //       try {
-      //         data.add([{quantity: 2, total: 190}]);
-      //         assert.equal(data.quantity.total.value(), 190);
-      //       } finally {
-      //         data.remove();
-      //         assert.equal(data.quantity.total.value(), 0);
-      //       }
-      //     });
-      //   });
+        describe("groupAll (sum of total)", function() {
+          beforeEach(function() {
+            data.quantity.total = data.quantity.groupAll().reduceSum(function(d) { return d.total; });
+          });
+          it("value", function(done) {
+            assert.equal(data.quantity.total.value(), 0, done);
+          });
+          it("value after adding data", function(done) {
+            data.add([{quantity: 2, total: 190}]);
+            assert.equal(data.quantity.total.value(), 190, done);
+          })
+          it("value after removing all data", function(done) {
+            data.add([{quantity: 2, total: 190}]);
+            data.remove();
+            assert.equal(data.quantity.total.value(), 0, done);
+          });
+        });
 
       //   describe("groupAll (custom reduce)", function() {
       //     beforeEach(function() {
