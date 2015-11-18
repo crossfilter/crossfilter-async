@@ -1,51 +1,48 @@
 /* global Promise */
-/* global Promise */
-/* global Promise */
-/* global Promise */
 var assert = {
   equal: function(a, b, done) {
-    Promise.resolve(a).then(function(aResult) {
+    return Promise.resolve(a).then(function(aResult) {
       Promise.resolve(b).then(function(bResult) {
         expect(aResult).toEqual(bResult);
         if(done) done();
       })
-    })
+    });
   },
   strictEqual: function(a, b, done) {
-    Promise.resolve(a).then(function(aResult) {
+    return Promise.resolve(a).then(function(aResult) {
       Promise.resolve(b).then(function(bResult) {
         expect(aResult).toEqual(bResult);
         if(done) done();
       })
-    })
+    });
   },
   deepEqual: function(a, b, done) {
-    Promise.resolve(a).then(function(aResult) {
+    return Promise.resolve(a).then(function(aResult) {
       Promise.resolve(b).then(function(bResult) {
         expect(aResult).toEqual(bResult);
         if(done) done();
       })
-    })
+    });
   },
   isTrue: function(a, done) {
-    Promise.resolve(a).then(function(aResult) {
+    return Promise.resolve(a).then(function(aResult) {
       expect(aResult).toBeTruthy();
       if(done) done();
-    })
+    });
   },
   isFalse: function(a, done) {
-    Promise.resolve(a).then(function(aResult) {
+    return Promise.resolve(a).then(function(aResult) {
       expect(aResult).not.toBeTruthy();
       if(done) done();
-    })
+    });
   },
   lesser: function(a, b, done) {
-    Promise.resolve(a).then(function(aResult) {
+    return Promise.resolve(a).then(function(aResult) {
       Promise.resolve(b).then(function(bResult) {
         expect(aResult).toBeLessThan(bResult);
         if(done) done();
       })
-    })
+    });
   },
 }
 
@@ -164,14 +161,14 @@ describe("promisefilter", function() {
           it("value", function(done) {
             assert.equal(data.quantity.count.value(), 0, done);
           });
-          it("value after adding data", function(done) {
-            data.add([{quantity: 2, total: 190}]);
-            assert.equal(data.quantity.count.value(), 1, done);
-          });
           it("value after removing all data", function(done) {
-            data.add([{quantity: 2, total: 190}]);
-            data.remove();
-            assert.equal(data.quantity.count.value(), 0, done);
+            try {
+              data.add([{quantity: 2, total: 190}]);
+              assert.equal(data.quantity.count.value(), 1);
+            } finally {
+              data.remove();
+              assert.equal(data.quantity.count.value(), 0, done);
+            }
           });
         });
 
@@ -182,14 +179,14 @@ describe("promisefilter", function() {
           it("value", function(done) {
             assert.equal(data.quantity.total.value(), 0, done);
           });
-          it("value after adding data", function(done) {
-            data.add([{quantity: 2, total: 190}]);
-            assert.equal(data.quantity.total.value(), 190, done);
-          })
           it("value after removing all data", function(done) {
-            data.add([{quantity: 2, total: 190}]);
-            data.remove();
-            assert.equal(data.quantity.total.value(), 0, done);
+            try {
+              data.add([{quantity: 2, total: 190}]);
+              assert.equal(data.quantity.total.value(), 190);
+            } finally {
+              data.remove();
+              assert.equal(data.quantity.total.value(), 0, done);
+            }
           });
         });
 
@@ -203,14 +200,14 @@ describe("promisefilter", function() {
           it("value", function(done) {
             assert.equal(data.quantity.custom.value(), 1, done);
           });
-          it("value after adding data", function(done) {
-            data.add([{quantity: 2, total: 190}]);
-            assert.equal(data.quantity.custom.value(), 2, done);
-          });
           it("value after removing all data", function(done) {
-            data.add([{quantity: 2, total: 190}]);
-            data.remove();
-            assert.equal(data.quantity.custom.value(), 1, done);
+            try {
+              data.add([{quantity: 2, total: 190}]);
+              assert.equal(data.quantity.custom.value(), 2);
+            } finally {
+              data.remove();
+              assert.equal(data.quantity.custom.value(), 1, done);
+            }
           });
         });
 
@@ -236,23 +233,15 @@ describe("promisefilter", function() {
               return 0;
             });
             data.groupSum = data.bar.groupAll().reduceSum(function(d) { return d.val; });
-            data.groupCount = data.bar.groupAll();
           });
-          afterEach(function(done) {
-            data.foo.filterAll().then(done);
-          })
           it("on group creation", function(done) {
             assert.deepEqual(data.groupMax.value(), data.groupSum.value(), done);
           });
           it("on filtering", function(done) {
             data.foo.filterRange([1, 3]);
-            var p1 = new Promise(function(resolve, reject) {
-              assert.deepEqual(data.groupMax.value(), 8, resolve);
-            });
-            var p2 = new Promise(function(resolve, reject) {
-              assert.deepEqual(data.groupSum.value(), 4, resolve);
-            });
-            Promise.all([p1,p2]).then(done);
+            assert.deepEqual(data.groupMax.value(), 8);
+            assert.deepEqual(data.groupSum.value(), 4);
+            data.foo.filterAll().then(done);
           });
           it("on adding data after group creation", function(done) {
             data.add([{foo: 1, val: 2}]);
@@ -261,49 +250,38 @@ describe("promisefilter", function() {
           it("on adding data when a filter is in place", function(done) {
             data.foo.filterRange([1,3]);
             data.add([{foo: 3, val: 1}]);
-            var p1 = new Promise(function(resolve, reject) {
-              assert.deepEqual(data.groupMax.value(), 9, resolve);
-            });
-            var p2 = new Promise(function(resolve, reject) {
-              assert.deepEqual(data.groupSum.value(), 4, resolve);
-            });
-            Promise.all([p1,p2]).then(done);
+            assert.deepEqual(data.groupMax.value(), 9);
+            assert.deepEqual(data.groupSum.value(), 4);
+            data.foo.filterAll().then(done);
           });
           it("on removing data after group creation", function(done) {
-            data.val.filter(1).then(function() {
-              return data.remove();
-            }).then(function() {
-              var p1 = new Promise(function(resolve, reject) {
-                assert.deepEqual(data.groupMax.value(), 8, resolve);
-              });
-              var p2 = new Promise(function(resolve, reject) {
-                assert.deepEqual(data.groupSum.value(), 0, resolve);
-              });
-              Promise.all([p1,p2]).then(function() {
-                data.val.filterAll();
-                assert.deepEqual(data.groupMax.value(), data.groupSum.value(), done);
-              });
-            });
+            data.val.filter(1);
+            data.remove();
+            assert.deepEqual(data.groupMax.value(), 8);
+            assert.deepEqual(data.groupSum.value(), 0);
+
+            data.val.filterAll();
+            assert.deepEqual(data.groupMax.value(), data.groupSum.value(), done);
           });
         });
       });
     });
 
-    it("up to 64 dimensions supported", function() {
-      var data = promisefilter([]);
-      for (var i = 0; i < 64; i++) data.dimension(function() { return 0; });
-    });
+    // it("up to 64 dimensions supported", function() {
+    //   var data = promisefilter([]);
+    //   for (var i = 0; i < 64; i++) data.dimension(function() { return 0; });
+    // });
 
-    it("can add and remove 64 dimensions repeatedly", function() {
-      var data = promisefilter([]),
-          dimensions = [];
-      for (var j = 0; j < 10; j++) {
-        for (var i = 0; i < 64; i++) dimensions.push(data.dimension(function() { return 0; }));
-        while (dimensions.length) dimensions.pop().dispose();
-      }
-    });
+    // it("can add and remove 64 dimensions repeatedly", function() {
+    //   var data = promisefilter([]),
+    //       dimensions = [];
+    //   for (var j = 0; j < 10; j++) {
+    //     for (var i = 0; i < 64; i++) dimensions.push(data.dimension(function() { return 0; }));
+    //     while (dimensions.length) dimensions.pop().dispose();
+    //   }
+    // });
 
-    // it("filtering with more than 32 dimensions", function() {
+    // it("filtering with more than 32 dimensions", function(done) {
     //   var data = promisefilter();
     //   var dims = {};
 
@@ -318,6 +296,7 @@ describe("promisefilter", function() {
     //   }
 
     //   for (var i = 0; i < 50; i++) {
+    //     // This doesn't work because the i in the execution context doesn't get transferred.
     //     dims[i] = data.dimension(dimfunc(i));
     //   }
 
@@ -327,359 +306,328 @@ describe("promisefilter", function() {
     //     dims[i].filterAll();
     //     assert.equal(data.size(), 49 - i);
     //   }
+    //   assert.equal(data.size(), 0);
     // });
 
     describe("dimension", function() {
 
       describe("top", function() {
-        afterEach(function(done) {
-          data.date.filterAll()
-            .then(data.type.filterAll)
-            .then(data.quantity.filterAll)
-            .then(done);
-        });
-        
         it("returns the top k records by value, in descending order", function(done) {
-          var p1 = new Promise(function(resolve, reject) {
-            assert.deepEqual(data.total.top(3), [
-              {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"},
-              {date: "2011-11-14T20:49:07Z", quantity: 2, total: 290, tip: 200, type: "tab"},
-              {date: "2011-11-14T21:18:48Z", quantity: 4, total: 270, tip: 0, type: "tab"}
-            ], resolve);
-          });
-          var p2 = new Promise(function(resolve, reject) {
-            assert.deepEqual(data.date.top(3), [
-              {date: "2011-11-14T23:28:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
-              {date: "2011-11-14T23:23:29Z", quantity: 2, total: 190, tip: 100, type: "tab"},
-              {date: "2011-11-14T23:21:22Z", quantity: 2, total: 190, tip: 100, type: "tab"}
-            ], resolve);
-          });
-          Promise.all([p1,p2]).then(done);
+          assert.deepEqual(data.total.top(3), [
+            {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"},
+            {date: "2011-11-14T20:49:07Z", quantity: 2, total: 290, tip: 200, type: "tab"},
+            {date: "2011-11-14T21:18:48Z", quantity: 4, total: 270, tip: 0, type: "tab"}
+          ]);
+          assert.deepEqual(data.date.top(3), [
+            {date: "2011-11-14T23:28:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+            {date: "2011-11-14T23:23:29Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+            {date: "2011-11-14T23:21:22Z", quantity: 2, total: 190, tip: 100, type: "tab"}
+          ], done);
         });
         it("observes the associated dimension's filters", function(done) {
-          new Promise(function(resolve, reject) {
+          try {
             data.quantity.filterExact(4);
             assert.deepEqual(data.total.top(3), [
               {date: "2011-11-14T21:18:48Z", quantity: 4, total: 270, tip: 0, type: "tab"}
-            ], resolve);
-          }).then(function() {
-            return data.quantity.filterAll();
-          }).then(function() {
-            new Promise(function(resolve, reject) {
-              data.date.filterRange([new Date(Date.UTC(2011, 10, 14, 19)), new Date(Date.UTC(2011, 10, 14, 20))])
-                .then(function() {
-                  assert.deepEqual(data.date.top(10), [
-                    {date: "2011-11-14T19:30:44Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-                    {date: "2011-11-14T19:04:22Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-                    {date: "2011-11-14T19:00:31Z", quantity: 2, total: 190, tip: 100, type: "tab"}
-                  ], resolve)
-                });
-            }).then(function() {
-              data.date.filterRange([Date.UTC(2011, 10, 14, 19), Date.UTC(2011, 10, 14, 20)])
-                .then(function() {
-                  assert.deepEqual(data.date.top(10), [
-                    {date: "2011-11-14T19:30:44Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-                    {date: "2011-11-14T19:04:22Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-                    {date: "2011-11-14T19:00:31Z", quantity: 2, total: 190, tip: 100, type: "tab"}
-                  ], done);
-                });
-            });
-          });
+            ]);
+          } finally {
+            data.quantity.filterAll();
+          }
+          try {
+            data.date.filterRange([new Date(Date.UTC(2011, 10, 14, 19)), new Date(Date.UTC(2011, 10, 14, 20))]);
+            assert.deepEqual(data.date.top(10), [
+              {date: "2011-11-14T19:30:44Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+              {date: "2011-11-14T19:04:22Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+              {date: "2011-11-14T19:00:31Z", quantity: 2, total: 190, tip: 100, type: "tab"}
+            ]);
+            data.date.filterRange([Date.UTC(2011, 10, 14, 19), Date.UTC(2011, 10, 14, 20)]); // also comparable
+            assert.deepEqual(data.date.top(10), [
+              {date: "2011-11-14T19:30:44Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+              {date: "2011-11-14T19:04:22Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+              {date: "2011-11-14T19:00:31Z", quantity: 2, total: 190, tip: 100, type: "tab"}
+            ]);
+          } finally {
+            data.date.filterAll().then(done);
+          }
         });
         it("observes other dimensions' filters", function(done) {
-          data.type.filterExact("tab").then(function() {
-            return new Promise(function(resolve, reject) {
-              assert.deepEqual(data.total.top(2), [
-                {date: "2011-11-14T20:49:07Z", quantity: 2, total: 290, tip: 200, type: "tab"},
-                {date: "2011-11-14T21:18:48Z", quantity: 4, total: 270, tip: 0, type: "tab"}
-              ], resolve);
-            });
-          }).then(function() {
-            return data.type.filterExact("visa");
-          }).then(function() {
-            return new Promise(function(resolve, reject) {
-              assert.deepEqual(data.total.top(1), [
-                {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"}
-              ], resolve);
-            });
-          }).then(function () {
-            return data.quantity.filterExact(2);  
-          }).then(function() {
+          try {
+            data.type.filterExact("tab");
+            assert.deepEqual(data.total.top(2), [
+              {date: "2011-11-14T20:49:07Z", quantity: 2, total: 290, tip: 200, type: "tab"},
+              {date: "2011-11-14T21:18:48Z", quantity: 4, total: 270, tip: 0, type: "tab"}
+            ]);
+            data.type.filterExact("visa");
+            assert.deepEqual(data.total.top(1), [
+              {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"}
+            ]);
+            data.quantity.filterExact(2);
             assert.deepEqual(data.tip.top(1), [
               {date: "2011-11-14T17:38:40Z", quantity: 2, total: 200, tip: 100, type: "visa"}
-            ], done);
-          });
-        });
-        it("observes other dimensions' filters 2", function(done) {
-          data.type.filterExact("tab").then(function() {
-            return new Promise(function(resolve, reject) {
-              assert.deepEqual(data.date.top(2), [
-                {date: "2011-11-14T23:28:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
-                {date: "2011-11-14T23:23:29Z", quantity: 2, total: 190, tip: 100, type: "tab"}
-              ], resolve);
-            });
-          }).then(function() {
-            return data.type.filterExact("visa");
-          }).then(function() {
-            return new Promise(function(resolve, reject) {
-              assert.deepEqual(data.date.top(1), [
-                {date: "2011-11-14T23:16:09Z", quantity: 1, total: 200, tip: 100, type: "visa"}
-              ], resolve);
-            });
-          }).then(function() {
+            ]);
+          } finally {
+            data.type.filterAll();
+            data.quantity.filterAll();
+          }
+          try {
+            data.type.filterExact("tab");
+            assert.deepEqual(data.date.top(2), [
+              {date: "2011-11-14T23:28:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+              {date: "2011-11-14T23:23:29Z", quantity: 2, total: 190, tip: 100, type: "tab"}
+            ]);
+            data.type.filterExact("visa");
+            assert.deepEqual(data.date.top(1), [
+              {date: "2011-11-14T23:16:09Z", quantity: 1, total: 200, tip: 100, type: "visa"}
+            ]);
             data.quantity.filterExact(2);
-          }).then(function() {
             assert.deepEqual(data.date.top(1), [
               {date: "2011-11-14T22:58:54Z", quantity: 2, total: 100, tip: 0, type: "visa"}
-            ], done);
-          });
+            ]);
+          } finally {
+            data.type.filterAll();
+            data.quantity.filterAll().then(done);
+          }
         });
         it("negative or zero k returns an empty array", function(done) {
-          Promise.all([
-            new Promise(function(r,j) { assert.deepEqual(data.quantity.top(0), [], r) }),
-            new Promise(function(r,j) { assert.deepEqual(data.quantity.top(-1), [], r) }),
-            new Promise(function(r,j) { assert.deepEqual(data.quantity.top(NaN), [], r) }),
-            new Promise(function(r,j) { assert.deepEqual(data.quantity.top(-Infinity), [], r) }),
-            new Promise(function(r,j) { assert.deepEqual(data.date.top(0), [], r) }),
-            new Promise(function(r,j) { assert.deepEqual(data.date.top(-1), [], r) }),
-            new Promise(function(r,j) { assert.deepEqual(data.date.top(NaN), [], r) }),
-            new Promise(function(r,j) { assert.deepEqual(data.date.top(-Infinity), [], r) })
-          ]).then(done);
+          assert.deepEqual(data.quantity.top(0), []);
+          assert.deepEqual(data.quantity.top(-1), []);
+          assert.deepEqual(data.quantity.top(NaN), []);
+          assert.deepEqual(data.quantity.top(-Infinity), []);
+          assert.deepEqual(data.date.top(0), []);
+          assert.deepEqual(data.date.top(-1), []);
+          assert.deepEqual(data.date.top(NaN), []);
+          assert.deepEqual(data.date.top(-Infinity), [], done);
         });
       });
 
       describe("bottom", function() {
-        afterEach(function(done) {
-          data.date.filterAll()
-            .then(data.type.filterAll)
-            .then(data.quantity.filterAll)
-            .then(done);
-        });
         it("returns the bottom k records by value, in descending order", function(done) {
-          var p1 = new Promise(function(resolve, reject) {
-            assert.deepEqual(data.total.bottom(3), [
-              {date: "2011-11-14T22:30:22Z", quantity: 2, total: 89, tip: 0, type: "tab"},
-              {date: "2011-11-14T16:30:43Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-              {date: "2011-11-14T16:48:46Z", quantity: 2, total: 90, tip: 0, type: "tab"}
-            ], resolve);
-          });
-          var p2 = new Promise(function(resolve, reject) {
-            assert.deepEqual(data.date.bottom(3), [
-              {date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
-              {date: "2011-11-14T16:20:19Z", quantity: 2, total: 190, tip: 100, type: "tab"},
-              {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"}
-            ], resolve);
-          });
-          Promise.all([p1,p2]).then(done);
+          assert.deepEqual(data.total.bottom(3), [
+            {date: "2011-11-14T22:30:22Z", quantity: 2, total: 89, tip: 0, type: "tab"},
+            {date: "2011-11-14T16:30:43Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+            {date: "2011-11-14T16:48:46Z", quantity: 2, total: 90, tip: 0, type: "tab"}
+          ]);
+          assert.deepEqual(data.date.bottom(3), [
+            {date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+            {date: "2011-11-14T16:20:19Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+            {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"}
+         ], done);
         });
-    //     it("observes the associated dimension's filters", function() {
-    //       try {
-    //         data.quantity.filterExact(4);
-    //         assert.deepEqual(data.total.bottom(3), [
-    //           {date: "2011-11-14T21:18:48Z", quantity: 4, total: 270, tip: 0, type: "tab"}
-    //         ]);
-    //       } finally {
-    //         data.quantity.filterAll();
-    //       }
-    //       try {
-    //         data.date.filterRange([new Date(Date.UTC(2011, 10, 14, 19)), new Date(Date.UTC(2011, 10, 14, 20))]);
-    //         assert.deepEqual(data.date.bottom(10), [
-    //           {date: "2011-11-14T19:00:31Z", quantity: 2, total: 190, tip: 100, type: "tab"},
-    //           {date: "2011-11-14T19:04:22Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-    //           {date: "2011-11-14T19:30:44Z", quantity: 2, total: 90, tip: 0, type: "tab"}
-    //         ]);
-    //         data.date.filterRange([Date.UTC(2011, 10, 14, 19), Date.UTC(2011, 10, 14, 20)]); // also comparable
-    //         assert.deepEqual(data.date.bottom(10), [
-    //           {date: "2011-11-14T19:00:31Z", quantity: 2, total: 190, type: "tab", tip: 100},
-    //           {date: "2011-11-14T19:04:22Z", quantity: 2, total: 90, type: "tab", tip: 0},
-    //           {date: "2011-11-14T19:30:44Z", quantity: 2, total: 90, type: "tab", tip: 0}
-    //         ]);
-    //       } finally {
-    //         data.date.filterAll();
-    //       }
-    //     });
-    //     it("observes other dimensions' filters", function() {
-    //       try {
-    //         data.type.filterExact("tab");
-    //         assert.deepEqual(data.total.bottom(2), [
-    //           {date: "2011-11-14T22:30:22Z", quantity: 2, total: 89, tip: 0, type: "tab"},
-    //           {date: "2011-11-14T16:30:43Z", quantity: 2, total: 90, tip: 0, type: "tab"}
-    //         ]);
-    //         data.type.filterExact("visa");
-    //         assert.deepEqual(data.total.bottom(1), [
-    //           {date: "2011-11-14T22:58:54Z", quantity: 2, total: 100, tip: 0, type: "visa"}
-    //         ]);
-    //         data.quantity.filterExact(2);
-    //         assert.deepEqual(data.tip.bottom(1), [
-    //           {date: "2011-11-14T22:58:54Z", quantity: 2, total: 100, tip: 0, type: "visa"}
-    //         ]);
-    //       } finally {
-    //         data.type.filterAll();
-    //         data.quantity.filterAll();
-    //       }
-    //       try {
-    //         data.type.filterExact("tab");
-    //         assert.deepEqual(data.date.bottom(2), [
-    //           {date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
-    //           {date: "2011-11-14T16:20:19Z", quantity: 2, total: 190, tip: 100, type: "tab"}
-    //         ]);
-    //         data.type.filterExact("visa");
-    //         assert.deepEqual(data.date.bottom(1), [
-    //           {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"}
-    //         ]);
-    //         data.quantity.filterExact(2);
-    //         assert.deepEqual(data.date.bottom(1), [
-    //           {date: "2011-11-14T17:38:40Z", quantity: 2, total: 200, tip: 100, type: "visa"}
-    //         ]);
-    //       } finally {
-    //         data.type.filterAll();
-    //         data.quantity.filterAll();
-    //       }
-    //     });
-    //     it("negative or zero k returns an empty array", function() {
-    //       assert.deepEqual(data.quantity.bottom(0), []);
-    //       assert.deepEqual(data.quantity.bottom(-1), []);
-    //       assert.deepEqual(data.quantity.bottom(NaN), []);
-    //       assert.deepEqual(data.quantity.bottom(-Infinity), []);
-    //       assert.deepEqual(data.date.bottom(0), []);
-    //       assert.deepEqual(data.date.bottom(-1), []);
-    //       assert.deepEqual(data.date.bottom(NaN), []);
-    //       assert.deepEqual(data.date.bottom(-Infinity), []);
-    //     });
+        it("observes the associated dimension's filters", function(done) {
+          try {
+            data.quantity.filterExact(4);
+            assert.deepEqual(data.total.bottom(3), [
+              {date: "2011-11-14T21:18:48Z", quantity: 4, total: 270, tip: 0, type: "tab"}
+            ]);
+          } finally {
+            data.quantity.filterAll().then(done);
+          }
+          try {
+            data.date.filterRange([new Date(Date.UTC(2011, 10, 14, 19)), new Date(Date.UTC(2011, 10, 14, 20))]);
+            assert.deepEqual(data.date.bottom(10), [
+              {date: "2011-11-14T19:00:31Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+              {date: "2011-11-14T19:04:22Z", quantity: 2, total: 90, tip: 0, type: "tab"},
+              {date: "2011-11-14T19:30:44Z", quantity: 2, total: 90, tip: 0, type: "tab"}
+            ]);
+            data.date.filterRange([Date.UTC(2011, 10, 14, 19), Date.UTC(2011, 10, 14, 20)]); // also comparable
+            assert.deepEqual(data.date.bottom(10), [
+              {date: "2011-11-14T19:00:31Z", quantity: 2, total: 190, type: "tab", tip: 100},
+              {date: "2011-11-14T19:04:22Z", quantity: 2, total: 90, type: "tab", tip: 0},
+              {date: "2011-11-14T19:30:44Z", quantity: 2, total: 90, type: "tab", tip: 0}
+            ]);
+          } finally {
+            data.date.filterAll().then(done);
+          }
+        });
+        it("observes other dimensions' filters", function(done) {
+          try {
+            data.type.filterExact("tab");
+            assert.deepEqual(data.total.bottom(2), [
+              {date: "2011-11-14T22:30:22Z", quantity: 2, total: 89, tip: 0, type: "tab"},
+              {date: "2011-11-14T16:30:43Z", quantity: 2, total: 90, tip: 0, type: "tab"}
+            ]);
+            data.type.filterExact("visa");
+            assert.deepEqual(data.total.bottom(1), [
+              {date: "2011-11-14T22:58:54Z", quantity: 2, total: 100, tip: 0, type: "visa"}
+            ]);
+            data.quantity.filterExact(2);
+            assert.deepEqual(data.tip.bottom(1), [
+              {date: "2011-11-14T22:58:54Z", quantity: 2, total: 100, tip: 0, type: "visa"}
+            ]);
+          } finally {
+            data.type.filterAll();
+            data.quantity.filterAll();
+          }
+          try {
+            data.type.filterExact("tab");
+            assert.deepEqual(data.date.bottom(2), [
+              {date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+              {date: "2011-11-14T16:20:19Z", quantity: 2, total: 190, tip: 100, type: "tab"}
+            ]);
+            data.type.filterExact("visa");
+            assert.deepEqual(data.date.bottom(1), [
+              {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"}
+            ]);
+            data.quantity.filterExact(2);
+            assert.deepEqual(data.date.bottom(1), [
+              {date: "2011-11-14T17:38:40Z", quantity: 2, total: 200, tip: 100, type: "visa"}
+            ]);
+          } finally {
+            data.type.filterAll();
+            data.quantity.filterAll().then(done);
+          }
+        });
+        it("negative or zero k returns an empty array", function(done) {
+          assert.deepEqual(data.quantity.bottom(0), []);
+          assert.deepEqual(data.quantity.bottom(-1), []);
+          assert.deepEqual(data.quantity.bottom(NaN), []);
+          assert.deepEqual(data.quantity.bottom(-Infinity), []);
+          assert.deepEqual(data.date.bottom(0), []);
+          assert.deepEqual(data.date.bottom(-1), []);
+          assert.deepEqual(data.date.bottom(NaN), []);
+          assert.deepEqual(data.date.bottom(-Infinity), [], done);
+        });
       });
 
-    //   describe("filterExact", function() {
-    //     it("selects records that match the specified value exactly", function() {
-    //       try {
-    //         data.tip.filterExact(100);
-    //         assert.deepEqual(data.date.top(2), [
-    //           {date: "2011-11-14T23:28:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
-    //           {date: "2011-11-14T23:23:29Z", quantity: 2, total: 190, tip: 100, type: "tab"}
-    //         ]);
-    //       } finally {
-    //         data.tip.filterAll();
-    //       }
-    //     });
-    //     it("allows the filter value to be null", function() {
-    //       try {
-    //         data.tip.filterExact(null); // equivalent to 0 by natural ordering
-    //         assert.deepEqual(data.date.top(2), [
-    //           {date: "2011-11-14T22:58:54Z", quantity: 2, total: 100, tip: 0, type: "visa"},
-    //           {date: "2011-11-14T22:48:05Z", quantity: 2, total: 91, tip: 0, type: "tab"}
-    //         ]);
-    //       } finally {
-    //         data.tip.filterAll();
-    //       }
-    //     });
-    //   });
+      describe("filterExact", function() {
+        it("selects records that match the specified value exactly", function(done) {
+          try {
+            data.tip.filterExact(100);
+            assert.deepEqual(data.date.top(2), [
+              {date: "2011-11-14T23:28:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
+              {date: "2011-11-14T23:23:29Z", quantity: 2, total: 190, tip: 100, type: "tab"}
+            ]);
+          } finally {
+            data.tip.filterAll().then(done);
+          }
+        });
+        it("allows the filter value to be null", function(done) {
+          try {
+            data.tip.filterExact(null); // equivalent to 0 by natural ordering
+            assert.deepEqual(data.date.top(2), [
+              {date: "2011-11-14T22:58:54Z", quantity: 2, total: 100, tip: 0, type: "visa"},
+              {date: "2011-11-14T22:48:05Z", quantity: 2, total: 91, tip: 0, type: "tab"}
+            ]);
+          } finally {
+            data.tip.filterAll().then(done);
+          }
+        });
+      });
 
-    //   describe("filterRange", function() {
-    //     it("selects records greater than or equal to the inclusive lower bound", function() {
-    //       try {
-    //         data.total.filterRange([100, 190]);
-    //         assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total >= 100; }); }));
-    //         data.total.filterRange([110, 190]);
-    //         assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total >= 110; }); }));
-    //       } finally {
-    //         data.total.filterAll();
-    //       }
-    //     });
-    //     it("selects records less than the exclusive lower bound", function() {
-    //       try {
-    //         data.total.filterRange([100, 200]);
-    //         assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total < 200; }); }));
-    //         data.total.filterRange([100, 190]);
-    //         assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total < 190; }); }));
-    //       } finally {
-    //         data.total.filterAll();
-    //       }
-    //     });
-    //   });
+      // Not failing - TODO
+      describe("filterRange", function() {
+        it("selects records greater than or equal to the inclusive lower bound", function(done) {
+          var ps = [];
+          try {
+            data.total.filterRange([100, 190]);
+            ps.push(assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total >= 100; }); })));
+            data.total.filterRange([110, 190]);
+            // Empty set.
+            ps.push(assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total >= 110; }); })));
+          } finally {
+            ps.push(data.total.filterAll());
+          }
+          Promise.all(ps).then(done);
+        });
+        it("selects records less than the exclusive lower bound", function(done) {
+          var ps = [];
+          try {
+            data.total.filterRange([100, 200]);
+            ps.push(assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total < 200; }); })));
+            data.total.filterRange([100, 190]);
+            ps.push(assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total < 190; }); })));
+          } finally {
+            ps.push(data.total.filterAll());
+          }
+          Promise.all(ps).then(done);
+        });
+      });
 
-    //   describe("filterAll", function() {
-    //     it("clears the filter", function() {
-    //       data.total.filterRange([100, 200]);
-    //       assert.lesser(data.date.top(Infinity).then(function(a) { return a.length; }), 43);
-    //       data.total.filterAll();
-    //       assert.equal(data.date.top(Infinity).then(function(a) { return a.length; }), 43);
-    //     });
-    //   });
+      describe("filterAll", function() {
+        it("clears the filter", function(done) {
+          data.total.filterRange([100, 200]);
+          assert.lesser(data.date.top(Infinity).then(function(a) { return a.length; }), 43);
+          data.total.filterAll();
+          assert.equal(data.date.top(Infinity).then(function(a) { return a.length; }), 43, done);
+        });
+      });
 
-    //   describe("filterFunction", function() {
-    //     it("selects records according to an arbitrary function", function() {
-    //       try {
-    //         data.total.filterFunction(function(d) { return d % 2; });
-    //         assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total % 2; }); }));
-    //       } finally {
-    //         data.total.filterAll();
-    //       }
-    //     });
-    //     it("respects truthy values", function() {
-    //       try {
-    //         var group = data.quantity.groupAll().reduceCount();
-    //         data.total.filterRange([200, Infinity]);
-    //         data.total.filterFunction(function(d) { return "0"; });
-    //         assert.equal(group.value(), 43);
-    //         data.total.filterFunction(function(d) { return ""; });
-    //         assert.equal(group.value(), 0);
-    //       } finally {
-    //         data.total.filterAll();
-    //       }
-    //     });
-    //     it("groups on the first dimension are updated correctly", function() {
-    //       try {
-    //         var group = data.date.groupAll().reduceCount();
-    //         data.total.filterFunction(function(d) { return d === 90; });
-    //         assert.equal(group.value(), 13);
-    //         data.total.filterFunction(function(d) { return d === 91; });
-    //         assert.equal(group.value(), 1);
-    //       } finally {
-    //         data.total.filterAll();
-    //       }
-    //     });
-    //     it("followed by filterRange", function() {
-    //       try {
-    //         data.total.filterFunction(function(d) { return d % 2; });
-    //         data.total.filterRange([100, 200]);
-    //         assert.deepEqual(data.date.top(Infinity).then(function(a) { return a.length; }), 19);
-    //       } finally {
-    //         data.total.filterAll();
-    //       }
-    //     });
-    //   });
+      describe("filterFunction", function() {
+        it("selects records according to an arbitrary function", function(done) {
+          try {
+            data.total.filterFunction(function(d) { return d % 2; });
+            assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total % 2; }); }));
+          } finally {
+            data.total.filterAll().then(done);
+          }
+        });
+        it("respects truthy values", function(done) {
+          try {
+            var group = data.quantity.groupAll().reduceCount();
+            data.total.filterRange([200, Infinity]);
+            data.total.filterFunction(function(d) { return "0"; });
+            assert.equal(group.value(), 43);
+            data.total.filterFunction(function(d) { return ""; });
+            assert.equal(group.value(), 0);
+          } finally {
+            data.total.filterAll().then(done);
+          }
+        });
+        it("groups on the first dimension are updated correctly", function(done) {
+          try {
+            var group = data.date.groupAll().reduceCount();
+            data.total.filterFunction(function(d) { return d === 90; });
+            assert.equal(group.value(), 13);
+            data.total.filterFunction(function(d) { return d === 91; });
+            assert.equal(group.value(), 1);
+          } finally {
+            data.total.filterAll().then(done);
+          }
+        });
+        it("followed by filterRange", function(done) {
+          try {
+            data.total.filterFunction(function(d) { return d % 2; });
+            data.total.filterRange([100, 200]);
+            assert.deepEqual(data.date.top(Infinity).then(function(a) { return a.length; }), 19);
+          } finally {
+            data.total.filterAll().then(done);
+          }
+        });
+      });
 
-    //   describe("filter", function() {
-    //     it("is equivalent to filterRange when passed an array", function() {
-    //       try {
-    //         data.total.filter([100, 190]);
-    //         assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total >= 100; }); }));
-    //       } finally {
-    //         data.total.filter(null);
-    //       }
-    //     });
-    //     it("is equivalent to filterExact when passed a single value", function() {
-    //       try {
-    //         data.total.filter(100);
-    //         assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total == 100; }); }));
-    //       } finally {
-    //         data.total.filter(null);
-    //       }
-    //     });
-    //     it("is equivalent to filterFunction when passed a function", function() {
-    //       try {
-    //         data.total.filter(function(d) { return d % 2; });
-    //         assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total % 2; }); }));
-    //       } finally {
-    //         data.total.filter(null);
-    //       }
-    //     });
-    //     it("is equivalent to filterAll when passed null", function() {
-    //       data.total.filter([100, 200]);
-    //       assert.lesser(data.date.top(Infinity).then(function(a) { return a.length; }), 43);
-    //       data.total.filter(null);
-    //       assert.equal(data.date.top(Infinity).then(function(a) { return a.length; }), 43);
-    //     });
-    //   });
+      describe("filter", function() {
+        it("is equivalent to filterRange when passed an array", function(done) {
+          try {
+            data.total.filter([100, 190]);
+            assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total >= 100; }); }));
+          } finally {
+            data.total.filter(null).then(done);
+          }
+        });
+        it("is equivalent to filterExact when passed a single value", function(done) {
+          try {
+            data.total.filter(100);
+            assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total == 100; }); }));
+          } finally {
+            data.total.filter(null).then(done);
+          }
+        });
+        // NOT SUPPORTED IN ASYNC MODE
+        // it("is equivalent to filterFunction when passed a function", function(done) {
+        //   try {
+        //     data.total.filter(function(d) { return d % 2; });
+        //     assert.isTrue(data.date.top(Infinity).then(function(a) { return a.every(function(d) { return d.total % 2; }); }));
+        //   } finally {
+        //     data.total.filter(null).then(done);
+        //   }
+        // });
+        it("is equivalent to filterAll when passed null", function(done) {
+          data.total.filter([100, 200]);
+          assert.lesser(data.date.top(Infinity).then(function(a) { return a.length; }), 43);
+          data.total.filter(null);
+          assert.equal(data.date.top(Infinity).then(function(a) { return a.length; }), 43, done);
+        });
+      });
 
     //   describe("groupAll (count, the default)", function() {
     //     beforeEach(function() {
@@ -779,7 +727,7 @@ describe("promisefilter", function() {
     //         assert.isFalse(callback);
     //       });
     //     });
-    //   });
+      });
 
     //   describe("groupAll (sum of total)", function() {
     //     beforeEach(function() {
@@ -1101,7 +1049,7 @@ describe("promisefilter", function() {
     //       assert.deepEqual(g2.all(), [{key: 0, value: 2}, {key: 2, value: 2}]);
     //     });
     //   });
-    });
+    // });
 
     // describe("groupAll", function() {
     //   beforeEach(function() {

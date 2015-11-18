@@ -198,6 +198,9 @@ var opfilter = operative({
 	}
 }, [cfUrl]);
 
+var readSynchronizer = Promise.resolve();
+var updateSynchronizer = Promise.resolve();
+
 var cfFacade = function(data) {
 	var cfIndex = opfilter.new(data);
 	return {
@@ -211,7 +214,9 @@ var cfFacade = function(data) {
 					var dimGaIndex = dimIndex.then(function(idx) { return opfilter["dimension.groupAll"](idx); });
 					return {
 						value: function() {
-							return dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.value"](idx); });
+							var p = Promise.all([dimGaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.groupAll.value"](idx[0]); });
+							readSynchronizer = Promise.all([readSynchronizer, p]);
+							return p;
 						},
 						reduceSum: function(accessor) {
 							dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.reduceSum"](idx, accessor.toString()); });
@@ -234,10 +239,14 @@ var cfFacade = function(data) {
 					var dimGroupIndex = dimIndex.then(function(idx) { return opfilter["dimension.group"](idx, accessor.toString()); });
 					return {
 						top: function(value) {
-							return dimGroupIndex.then(function(idx) { return opfilter["dimension.group.top"](idx, value); });
+							var p = Promise.all([dimGroupIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.group.top"](idx[0], value); });
+							readSynchronizer = Promise.all([readSynchronizer, p]);
+							return p;
 						},
 						all: function() {
-							return dimGroupIndex.then(function(idx) { return opfilter["dimension.group.all"](idx); });
+							var p = Promise.all([dimGroupIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.group.all"](idx[0]); });
+							readSynchronizer = Promise.all([readSynchronizer, p]);
+							return p;
 						},
 						size: function() {
 							return dimGroupIndex.then(function(idx) { return opfilter["dimension.group.size"](idx); });
@@ -268,25 +277,39 @@ var cfFacade = function(data) {
 					};
 				},
 				filterRange: function(range) {
-					return dimIndex.then(function(idx) { return opfilter["dimension.filterRange"](idx, range); });
+					var p = Promise.all([dimIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.filterRange"](idx[0], range); });
+					updateSynchronizer = Promise.all([updateSynchronizer, p]);
+					return p;
 				},
 				filterExact: function(value) {
-					return dimIndex.then(function(idx) { return opfilter["dimension.filterExact"](idx, value); });
+					var p = Promise.all([dimIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.filterExact"](idx[0], value); });
+					updateSynchronizer = Promise.all([updateSynchronizer, p]);
+					return p;
 				},
 				filterFunction: function(func) {
-					return dimIndex.then(function(idx) { return opfilter["dimension.filterFunction"](idx, func.toString()); });
+					var p = Promise.all([dimIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.filterFunction"](idx[0], func.toString()); });
+					updateSynchronizer = Promise.all([updateSynchronizer, p]);
+					return p;
 				},
 				filterAll: function() {
-					return dimIndex.then(function(idx) { return opfilter["dimension.filterAll"](idx); });
+					var p = Promise.all([dimIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.filterAll"](idx[0]); });
+					updateSynchronizer = Promise.all([updateSynchronizer, p]);
+					return p;
 				},
 				filter: function(value) {
-					return dimIndex.then(function(idx) { return opfilter["dimension.filter"](idx, value); });
+					var p = Promise.all([dimIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.filter"](idx[0], value); });
+					updateSynchronizer = Promise.all([updateSynchronizer, p]);
+					return p;
 				},
 				top: function(value) {
-					return dimIndex.then(function(idx) { return opfilter["dimension.top"](idx, value); });
+					var p = Promise.all([dimIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.top"](idx[0], value); });
+					readSynchronizer = Promise.all([readSynchronizer, p]);
+					return p;
 				},
 				bottom: function(value) {
-					return dimIndex.then(function(idx) { return opfilter["dimension.bottom"](idx, value); });
+					var p = Promise.all([dimIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.bottom"](idx[0], value); });
+					readSynchronizer = Promise.all([readSynchronizer, p]);
+					return p;
 				}
 			}	
 		},
@@ -295,7 +318,9 @@ var cfFacade = function(data) {
 			
 			return {
 				value: function() {
-					return gaIndex.then(function(idx) { return opfilter["groupAll.value"](idx); });
+					var p = Promise.all([gaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["groupAll.value"](idx[0]); });
+					readSynchronizer = Promise.all([readSynchronizer, p]);
+					return p;
 				},
 				reduceSum: function(accessor) {
 					gaIndex.then(function(idx) { opfilter["groupAll.reduceSum"](idx, accessor.toString()); });
@@ -315,15 +340,19 @@ var cfFacade = function(data) {
 			}
 		},
 		remove: function() {
-			cfIndex.then(function(idx) { return opfilter.remove(idx); });
+			var p = Promise.all([cfIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter.remove(idx[0]); });
+			updateSynchronizer = Promise.all([updateSynchronizer, p]);
 			return this;
 		},
 		add: function(data) {
-			cfIndex.then(function(idx) { return opfilter.add(idx, data); });
+			var p = Promise.all([cfIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter.add(idx[0], data); });
+			updateSynchronizer = Promise.all([updateSynchronizer, p]);
 			return this;
 		},
 		size: function() {
-			return cfIndex.then(function(idx) { return opfilter.size(idx); });
+			var p = Promise.all([cfIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["size"](idx[0]); });
+			readSynchronizer = Promise.all([readSynchronizer, p]);
+			return p;
 		},
 		all: function() {
 			return cfIndex.then(function(idx) { return opfilter.all(idx); });
