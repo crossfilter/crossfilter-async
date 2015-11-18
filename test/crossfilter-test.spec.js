@@ -856,155 +856,160 @@ describe("promisefilter", function() {
           });
         });
 
-    //     describe("reduce", function() {
-    //       it("defaults to count", function() {
-    //         assert.deepEqual(data.date.hours.top(1), [
-    //           {key: new Date(Date.UTC(2011, 10, 14, 17, 0, 0)), value: 9}
-    //         ]);
-    //       });
-    //       it("determines the computed reduce value", function() {
-    //         try {
-    //           data.date.hours.reduceSum(function(d) { return d.total; });
-    //           assert.deepEqual(data.date.hours.top(1), [
-    //             {key: new Date(Date.UTC(2011, 10, 14, 17, 0, 0)), value: 1240}
-    //           ]);
-    //         } finally {
-    //           data.date.hours.reduceCount();
-    //         }
-    //       });
-    //       describe("gives reduce functions information on lifecycle of data element", function() {
-    //         var data;
-    //         beforeEach(function() {
-    //           data = promisefilter();
-    //           data.add([{foo: 1, val: 2}, {foo: 2, val: 2}, {foo: 3, val: 2}, {foo: 3, val: 2}]);
-    //           data.foo = data.dimension(function(d) { return d.foo; });
-    //           data.bar = data.dimension(function(d) { return d.foo; });
-    //           data.val = data.dimension(function(d) { return d.val; });
-    //           data.groupMax = data.bar.group().reduce(function(p,v,n){
-    //             if(n) {
-    //               p += v.val;
-    //             }
-    //             return p;
-    //           }, function(p,v,n) {
-    //             if(n) {
-    //               p -= v.val;
-    //             }
-    //             return p;
-    //           }, function() {
-    //             return 0;
-    //           });
-    //           data.groupSum = data.bar.group().reduceSum(function(d) { return d.val; });
+        describe("reduce", function() {
+          it("defaults to count", function(done) {
+            assert.deepEqual(data.date.hours.top(1), [
+              {key: new Date(Date.UTC(2011, 10, 14, 17, 0, 0)), value: 9}
+            ]).then(done);
+          });
+          it("determines the computed reduce value", function(done) {
+            try {
+              data.date.hours.reduceSum(function(d) { return d.total; });
+              assert.deepEqual(data.date.hours.top(1), [
+                {key: new Date(Date.UTC(2011, 10, 14, 17, 0, 0)), value: 1240}
+              ]);
+            } finally {
+              data.date.hours.reduceCount();
+              data.date.filterAll().then(done);
+            }
+          });
+          describe("gives reduce functions information on lifecycle of data element", function() {
+            var data;
+            beforeEach(function() {
+              data = promisefilter();
+              data.add([{foo: 1, val: 2}, {foo: 2, val: 2}, {foo: 3, val: 2}, {foo: 3, val: 2}]);
+              data.foo = data.dimension(function(d) { return d.foo; });
+              data.bar = data.dimension(function(d) { return d.foo; });
+              data.val = data.dimension(function(d) { return d.val; });
+              data.groupMax = data.bar.group().reduce(function(p,v,n){
+                if(n) {
+                  p += v.val;
+                }
+                return p;
+              }, function(p,v,n) {
+                if(n) {
+                  p -= v.val;
+                }
+                return p;
+              }, function() {
+                return 0;
+              });
+              data.groupSum = data.bar.group().reduceSum(function(d) { return d.val; });
 
-    //           return data;
-    //         });
-    //         it("on group creation", function() {
-    //           assert.deepEqual(data.groupMax.all(), data.groupSum.all());
-    //         });
-    //         it("on filtering", function() {
-    //           data.foo.filterRange([1, 3]);
-    //           assert.deepEqual(data.groupMax.all(), [{ key: 1, value: 2 }, { key: 2, value: 2 }, { key: 3, value: 4 }]);
-    //           assert.deepEqual(data.groupSum.all(), [{ key: 1, value: 2 }, { key: 2, value: 2 }, { key: 3, value: 0 }]);
-    //           data.foo.filterAll();
-    //         });
-    //         it("on adding data after group creation", function() {
-    //           data.add([{foo: 1, val: 2}]);
-    //           assert.deepEqual(data.groupMax.all(), data.groupSum.all());
-    //         });
-    //         it("on adding data when a filter is in place", function() {
-    //           data.foo.filterRange([1,3]);
-    //           data.add([{foo: 3, val: 1}]);
-    //           assert.deepEqual(data.groupMax.all(), [{ key: 1, value: 4 }, { key: 2, value: 2 }, { key: 3, value: 5 }]);
-    //           assert.deepEqual(data.groupSum.all(), [{ key: 1, value: 4 }, { key: 2, value: 2 }, { key: 3, value: 0 }]);
-    //           data.foo.filterAll();
-    //         });
-    //         it("on removing data after group creation", function() {
-    //           data.val.filter(1);
-    //           data.remove();
-    //           assert.deepEqual(data.groupMax.all(), [{ key: 1, value: 4 },{ key: 2, value: 2 },{ key: 3, value: 4 }]);
-    //           assert.deepEqual(data.groupSum.all(), [{ key: 1, value: 0 },{ key: 2, value: 0 },{ key: 3, value: 0 }]);
+              return data;
+            });
+            it("on group creation", function(done) {
+              assert.deepEqual(data.groupMax.all(), data.groupSum.all()).then(done);
+            });
+            it("on filtering", function(done) {
+              data.foo.filterRange([1, 3]);
+              assert.deepEqual(data.groupMax.all(), [{ key: 1, value: 2 }, { key: 2, value: 2 }, { key: 3, value: 4 }]);
+              assert.deepEqual(data.groupSum.all(), [{ key: 1, value: 2 }, { key: 2, value: 2 }, { key: 3, value: 0 }]);
+              data.foo.filterAll().then(done);
+            });
+            it("on adding data after group creation", function(done) {
+              data.add([{foo: 1, val: 2}]);
+              assert.deepEqual(data.groupMax.all(), data.groupSum.all()).then(done);
+            });
+            it("on adding data when a filter is in place", function(done) {
+              data.foo.filterRange([1,3]);
+              data.add([{foo: 3, val: 1}]);
+              assert.deepEqual(data.groupMax.all(), [{ key: 1, value: 2 }, { key: 2, value: 2 }, { key: 3, value: 5 }]);
+              assert.deepEqual(data.groupSum.all(), [{ key: 1, value: 2 }, { key: 2, value: 2 }, { key: 3, value: 0 }]);
+              data.foo.filterAll().then(done);
+            });
+            it("on removing data after group creation", function(done) {
+              data.val.filter(1);
+              data.remove();
+              assert.deepEqual(data.groupMax.all(), [{ key: 1, value: 2 },{ key: 2, value: 2 },{ key: 3, value: 4 }]);
+              assert.deepEqual(data.groupSum.all(), [{ key: 1, value: 0 },{ key: 2, value: 0 },{ key: 3, value: 0 }]);
 
-    //           data.val.filterAll();
-    //           assert.deepEqual(data.groupMax.all(), data.groupSum.all());
-    //         });
-    //       });
-    //     });
+              data.val.filterAll();
+              assert.deepEqual(data.groupMax.all(), data.groupSum.all()).then(done);
+            });
+          });
+        });
 
-    //     describe("top", function() {
-    //       it("returns the top k groups by reduce value, in descending order", function() {
-    //         assert.deepEqual(data.date.hours.top(3), [
-    //           {key: new Date(Date.UTC(2011, 10, 14, 17, 0, 0)), value: 9},
-    //           {key: new Date(Date.UTC(2011, 10, 14, 16, 0, 0)), value: 7},
-    //           {key: new Date(Date.UTC(2011, 10, 14, 21, 0, 0)), value: 6}
-    //         ]);
-    //       });
-    //       it("observes the specified order", function() {
-    //         try {
-    //           data.date.hours.order(function(v) { return -v; });
-    //           assert.deepEqual(data.date.hours.top(3), [
-    //             {key: new Date(Date.UTC(2011, 10, 14, 20, 0, 0)), value: 2},
-    //             {key: new Date(Date.UTC(2011, 10, 14, 19, 0, 0)), value: 3},
-    //             {key: new Date(Date.UTC(2011, 10, 14, 18, 0, 0)), value: 5}
-    //           ]);
-    //         } finally {
-    //           data.date.hours.order(function(v) { return v; });
-    //         }
-    //       });
-    //     });
+        describe("top", function() {
+          it("returns the top k groups by reduce value, in descending order", function(done) {
+            assert.deepEqual(data.date.hours.top(3), [
+              {key: new Date(Date.UTC(2011, 10, 14, 17, 0, 0)), value: 9},
+              {key: new Date(Date.UTC(2011, 10, 14, 16, 0, 0)), value: 7},
+              {key: new Date(Date.UTC(2011, 10, 14, 21, 0, 0)), value: 6}
+            ]).then(done);
+          });
+          it("observes the specified order", function(done) {
+            try {
+              data.date.hours.order(function(v) { return -v; });
+              assert.deepEqual(data.date.hours.top(3), [
+                {key: new Date(Date.UTC(2011, 10, 14, 20, 0, 0)), value: 2},
+                {key: new Date(Date.UTC(2011, 10, 14, 19, 0, 0)), value: 3},
+                {key: new Date(Date.UTC(2011, 10, 14, 18, 0, 0)), value: 5}
+              ]);
+            } finally {
+              data.date.hours.order(function(v) { return v; });
+              data.date.filterAll().then(done);
+            }
+          });
+        });
 
-    //     describe("order", function() {
-    //       it("defaults to the identity function", function() {
-    //         assert.deepEqual(data.date.hours.top(1), [
-    //           {key: new Date(Date.UTC(2011, 10, 14, 17, 0, 0)), value: 9}
-    //         ]);
-    //       });
-    //       it("is useful in conjunction with a compound reduce value", function() {
-    //         try {
-    //           data.date.hours.reduce(
-    //               function(p, v) { ++p.count; p.total += v.total; return p; },
-    //               function(p, v) { --p.count; p.total -= v.total; return p; },
-    //               function() { return {count: 0, total: 0}; })
-    //               .order(function(v) { return v.total; });
-    //           assert.deepEqual(data.date.hours.top(1), [
-    //             {key: new Date(Date.UTC(2011, 10, 14, 17, 0, 0)), value: {count: 9, total: 1240}}
-    //           ]);
-    //         } finally {
-    //           data.date.hours.reduceCount().orderNatural();
-    //         }
-    //       });
-    //     });
+        describe("order", function() {
+          it("defaults to the identity function", function(done) {
+            assert.deepEqual(data.date.hours.top(1), [
+              {key: new Date(Date.UTC(2011, 10, 14, 17, 0, 0)), value: 9}
+            ]).then(done);
+          });
+          it("is useful in conjunction with a compound reduce value", function(done) {
+            try {
+              data.date.hours.reduce(
+                  function(p, v) { ++p.count; p.total += v.total; return p; },
+                  function(p, v) { --p.count; p.total -= v.total; return p; },
+                  function() { return {count: 0, total: 0}; })
+                  .order(function(v) { return v.total; });
+              assert.deepEqual(data.date.hours.top(1), [
+                {key: new Date(Date.UTC(2011, 10, 14, 17, 0, 0)), value: {count: 9, total: 1240}}
+              ]);
+            } finally {
+              data.date.hours.reduceCount().orderNatural();
+              data.date.filterAll().then(done);
+            }
+          });
+        });
 
-    //     describe("dispose", function() {
-    //       it("detaches from reduce listeners", function() {
-    //         var data = promisefilter([0, 1, 2]),
-    //             callback, // indicates a reduce has occurred in this group
-    //             dimension = data.dimension(function(d) { return d; }),
-    //             other = data.dimension(function(d) { return d; }),
-    //             group = dimension
-    //               .group(function(d) { return d; })
-    //               .reduce(function() { callback = true; }, function() { callback = true; }, function() {});
-    //         group.all(); // force this group to be reduced when filters change
-    //         callback = false;
-    //         group.dispose();
-    //         other.filterRange([1, 2]);
-    //         assert.isFalse(callback);
-    //       });
-    //       it("detaches from add listeners", function() {
-    //         var data = promisefilter([0, 1, 2]),
-    //             callback, // indicates data has been added and the group has been reduced
-    //             dimension = data.dimension(function(d) { return d; }),
-    //             group = dimension
-    //               .group(function(d) { return d; })
-    //               .reduce(function() { callback = true; }, function() { callback = true; }, function() {});
-    //         group.all(); // force this group to be reduced when filters change
-    //         callback = false;
-    //         group.dispose();
-    //         data.add([3, 4, 5]);
-    //         assert.isFalse(callback);
-    //       });
-    //     });
-      });
+        // This doesn't work with the async approach.
+      //   describe("dispose", function() {
+      //     it("detaches from reduce listeners", function(done) {
+      //       var data = promisefilter([0, 1, 2]),
+      //           callback, // indicates a reduce has occurred in this group
+      //           dimension = data.dimension(function(d) { return d; }),
+      //           other = data.dimension(function(d) { return d; }),
+      //           group = dimension
+      //             .group(function(d) { return d; })
+      //             .reduce(function() { callback = true; }, function() { callback = true; }, function() {});
+      //       group.all(); // force this group to be reduced when filters change
+      //       callback = false;
+      //       group.dispose();
+      //       other.filterRange([1, 2]);
+      //       assert.isFalse(callback).then(done);
+      //     });
+      //     it("detaches from add listeners", function(done) {
+      //       var data = promisefilter([0, 1, 2]),
+      //           callback, // indicates data has been added and the group has been reduced
+      //           dimension = data.dimension(function(d) { return d; }),
+      //           group = dimension
+      //             .group(function(d) { return d; })
+      //             .reduce(function() { callback = true; }, function() { callback = true; }, function() {});
+      //       group.all(); // force this group to be reduced when filters change
+      //       callback = false;
+      //       group.dispose();
+      //       data.add([3, 4, 5]);
+      //       assert.isFalse(callback).then(done);
+      //     });
+      //   });
+      // });
 
-    //   describe("dispose", function() {
+      describe("dispose", function() {
+// These tests with callbacks don't work in the async API
     //     it("detaches from add listeners", function() {
     //       var data = promisefilter([0, 1, 2]),
     //           callback, // indicates a reduce has occurred in this group
@@ -1041,113 +1046,115 @@ describe("promisefilter", function() {
     //       data.add([3, 4, 5]);
     //       assert.isFalse(callback);
     //     });
-    //     it("clears dimension filters from groups", function() {
-    //       var data = promisefilter([0, 0, 2, 2]),
-    //           d1 = data.dimension(function(d) { return -d; }),
-    //           d2 = data.dimension(function(d) { return +d; }),
-    //           g2 = d2.group(function(d) { return Math.round( d / 2 ) * 2; }),
-    //           all = g2.all();
-    //       d1.filterRange([-1, 1]); // a filter is present when the dimension is disposed
-    //       d1.dispose();
-    //       assert.deepEqual(g2.all(), [{key: 0, value: 2}, {key: 2, value: 2}]);
-    //     });
-    //   });
+        it("clears dimension filters from groups", function(done) {
+          var data = promisefilter([0, 0, 2, 2]),
+              d1 = data.dimension(function(d) { return -d; }),
+              d2 = data.dimension(function(d) { return +d; }),
+              g2 = d2.group(function(d) { return Math.round( d / 2 ) * 2; }),
+              all = g2.all();
+          d1.filterRange([-1, 1]); // a filter is present when the dimension is disposed
+          d1.dispose();
+          assert.deepEqual(g2.all(), [{key: 0, value: 2}, {key: 2, value: 2}]).then(done);
+        });
+      });
     });
 
-    // describe("groupAll", function() {
-    //   beforeEach(function() {
-    //     data.allGrouped = data.groupAll().reduceSum(function(d) { return d.total; });
-    //   });
+    describe("groupAll", function() {
+      beforeEach(function() {
+        data.allGrouped = data.groupAll().reduceSum(function(d) { return d.total; });
+      });
 
-    //   it("does not have top and order methods", function() {
-    //     assert.isFalse("top" in data.allGrouped);
-    //     assert.isFalse("order" in data.allGrouped);
-    //   });
+      it("does not have top and order methods", function(done) {
+        assert.isFalse("top" in data.allGrouped);
+        assert.isFalse("order" in data.allGrouped).then(done);
+      });
 
-    //   describe("reduce", function() {
-    //     it("determines the computed reduce value", function() {
-    //       try {
-    //         data.allGrouped.reduceCount();
-    //         assert.strictEqual(data.allGrouped.value(), 43);
-    //       } finally {
-    //         data.allGrouped.reduceSum(function(d) { return d.total; });
-    //       }
-    //     });
+      describe("reduce", function() {
+        it("determines the computed reduce value", function(done) {
+          try {
+            data.allGrouped.reduceCount();
+            assert.strictEqual(data.allGrouped.value(), 43);
+          } finally {
+            data.allGrouped.reduceSum(function(d) { return d.total; });
+            data.date.filterAll().then(done);
+          }
+        });
 
-    //     describe("gives reduce functions information on lifecycle of data element", function() {
-    //       var data;
-    //       beforeEach(function() {
-    //         data = promisefilter();
-    //         data.add([{foo: 1, val: 2}, {foo: 2, val: 2}, {foo: 3, val: 2}, {foo: 3, val: 2}]);
-    //         data.foo = data.dimension(function(d) { return d.foo; });
-    //         data.bar = data.dimension(function(d) { return d.foo; });
-    //         data.val = data.dimension(function(d) { return d.val; });
-    //         data.groupMax = data.groupAll().reduce(function(p,v,n){
-    //           if(n) {
-    //             p += v.val;
-    //           }
-    //           return p;
-    //         }, function(p,v,n) {
-    //           if(n) {
-    //             p -= v.val;
-    //           }
-    //           return p;
-    //         }, function() {
-    //           return 0;
-    //         });
-    //         data.groupSum = data.groupAll().reduceSum(function(d) { return d.val; });
-    //       });
-    //       it("on group creation", function() {
-    //         assert.deepEqual(data.groupMax.value(), data.groupSum.value());
-    //       });
-    //       it("on filtering", function() {
-    //         data.foo.filterRange([1, 3]);
-    //         assert.deepEqual(data.groupMax.value(), 8);
-    //         assert.deepEqual(data.groupSum.value(), 4);
-    //         data.foo.filterAll();
-    //       });
-    //       it("on adding data after group creation", function() {
-    //         data.add([{foo: 1, val: 2}]);
-    //         assert.deepEqual(data.groupMax.value(), data.groupSum.value());
-    //       });
-    //       it("on adding data when a filter is in place", function() {
-    //         data.foo.filterRange([1,3]);
-    //         data.add([{foo: 3, val: 1}]);
-    //         assert.deepEqual(data.groupMax.value(), 11);
-    //         assert.deepEqual(data.groupSum.value(), 6);
-    //         data.foo.filterAll();
-    //       });
-    //       it("on removing data after group creation", function() {
-    //         data.val.filter(1);
-    //         data.remove();
-    //         assert.deepEqual(data.groupMax.value(), 10);
-    //         assert.deepEqual(data.groupSum.value(), 0);
+        describe("gives reduce functions information on lifecycle of data element", function() {
+          var data;
+          beforeEach(function() {
+            data = promisefilter();
+            data.add([{foo: 1, val: 2}, {foo: 2, val: 2}, {foo: 3, val: 2}, {foo: 3, val: 2}]);
+            data.foo = data.dimension(function(d) { return d.foo; });
+            data.bar = data.dimension(function(d) { return d.foo; });
+            data.val = data.dimension(function(d) { return d.val; });
+            data.groupMax = data.groupAll().reduce(function(p,v,n){
+              if(n) {
+                p += v.val;
+              }
+              return p;
+            }, function(p,v,n) {
+              if(n) {
+                p -= v.val;
+              }
+              return p;
+            }, function() {
+              return 0;
+            });
+            data.groupSum = data.groupAll().reduceSum(function(d) { return d.val; });
+          });
+          it("on group creation", function(done) {
+            assert.deepEqual(data.groupMax.value(), data.groupSum.value()).then(done);
+          });
+          it("on filtering", function(done) {
+            data.foo.filterRange([1, 3]);
+            assert.deepEqual(data.groupMax.value(), 8);
+            assert.deepEqual(data.groupSum.value(), 4);
+            data.foo.filterAll().then(done);
+          });
+          it("on adding data after group creation", function(done) {
+            data.add([{foo: 1, val: 2}]);
+            assert.deepEqual(data.groupMax.value(), data.groupSum.value()).then(done);
+          });
+          it("on adding data when a filter is in place", function(done) {
+            data.foo.filterRange([1,3]);
+            data.add([{foo: 3, val: 1}]);
+            assert.deepEqual(data.groupMax.value(), 9);
+            assert.deepEqual(data.groupSum.value(), 4);
+            data.foo.filterAll().then(done);
+          });
+          it("on removing data after group creation", function(done) {
+            data.val.filter(1);
+            data.remove();
+            assert.deepEqual(data.groupMax.value(), 8);
+            assert.deepEqual(data.groupSum.value(), 0);
 
-    //         data.val.filterAll();
-    //         assert.deepEqual(data.groupMax.value(), data.groupSum.value());
-    //       });
-    //     });
-    //   });
+            data.val.filterAll();
+            assert.deepEqual(data.groupMax.value(), data.groupSum.value()).then(done);
+          });
+        });
+      });
 
-    //   describe("value", function() {
-    //     it("returns the sum total of matching records", function() {
-    //       assert.strictEqual(data.allGrouped.value(), 6660);
-    //     });
-    //     it("observes all dimension's filters", function() {
-    //       try {
-    //         data.type.filterExact("tab");
-    //         assert.strictEqual(data.allGrouped.value(), 4760);
-    //         data.type.filterExact("visa");
-    //         assert.strictEqual(data.allGrouped.value(), 1400);
-    //         data.tip.filterExact(100);
-    //         assert.strictEqual(data.allGrouped.value(), 1000);
-    //       } finally {
-    //         data.type.filterAll();
-    //         data.tip.filterAll();
-    //       }
-    //     });
-    //   });
+      describe("value", function() {
+        it("returns the sum total of matching records", function(done) {
+          assert.strictEqual(data.allGrouped.value(), 6660).then(done);
+        });
+        it("observes all dimension's filters", function(done) {
+          try {
+            data.type.filterExact("tab");
+            assert.strictEqual(data.allGrouped.value(), 4760);
+            data.type.filterExact("visa");
+            assert.strictEqual(data.allGrouped.value(), 1400);
+            data.tip.filterExact(100);
+            assert.strictEqual(data.allGrouped.value(), 1000);
+          } finally {
+            data.type.filterAll();
+            data.tip.filterAll().then(done);
+          }
+        });
+      });
 
+      // These callback-based approaches don't work with the async API
     //   describe("dispose", function() {
     //     it("detaches from reduce listeners", function() {
     //       var data = promisefilter([0, 1, 2]),
@@ -1171,200 +1178,202 @@ describe("promisefilter", function() {
     //       assert.isFalse(callback);
     //     });
     //   });
-    // });
+    });
 
-    // describe("size", function() {
-    //   it("returns the total number of elements", function() {
-    //     assert.equal(data.size(), 43);
-    //   });
-    //   it("is not affected by any dimension filters", function() {
-    //     try {
-    //       data.quantity.filterExact(4);
-    //       assert.equal(data.size(), 43);
-    //     } finally {
-    //       data.quantity.filterAll();
-    //     }
-    //   });
-    // });
+    describe("size", function() {
+      it("returns the total number of elements", function(done) {
+        assert.equal(data.size(), 43).then(done);
+      });
+      it("is not affected by any dimension filters", function(done) {
+        try {
+          data.quantity.filterExact(4);
+          assert.equal(data.size(), 43);
+        } finally {
+          data.quantity.filterAll().then(done);
+        }
+      });
+    });
 
-    // describe("all", function() {
-    //   it("returns the full data array", function() {
-    //     var raw = data.all();
-    //     assert.equal(raw.then(function(a) { return a.length; }), 43);
-    //   });
-    //   it("is not affected by any dimension filters", function() {
-    //     try {
-    //       data.quantity.filterExact(4);
-    //       var raw = data.all();
-    //       assert.equal(raw.then(function(a) { return a.length; }), 43);
-    //     } finally {
-    //       data.quantity.filterAll();
-    //     }
-    //   });
-    // });
+    describe("all", function() {
+      it("returns the full data array", function(done) {
+        var raw = data.all();
+        assert.equal(raw.then(function(a) { return a.length; }), 43).then(done);
+      });
+      it("is not affected by any dimension filters", function(done) {
+        try {
+          data.quantity.filterExact(4);
+          var raw = data.all();
+          assert.equal(raw.then(function(a) { return a.length; }), 43);
+        } finally {
+          data.quantity.filterAll().then(done);
+        }
+      });
+    });
 
-    // describe("add", function() {
-    //   it("increases the size of the promisefilter", function() {
-    //     var data = promisefilter([]);
-    //     assert.equal(data.size(), 0);
-    //     data.add([0, 1, 2, 3, 4, 5, 6, 6, 6, 7]);
-    //     assert.equal(data.size(), 10);
-    //     data.add([]);
-    //     assert.equal(data.size(), 10);
-    //   });
-    //   it("existing filters are consistent with new records", function() {
-    //     var data = promisefilter([]),
-    //         foo = data.dimension(function(d) { return +d; }),
-    //         bar = data.dimension(function(d) { return -d; });
-    //     assert.deepEqual(foo.top(Infinity), []);
-    //     foo.filterExact(42);
-    //     data.add([43, 42, 41]);
-    //     assert.deepEqual(foo.top(Infinity), [42]);
-    //     assert.deepEqual(bar.top(Infinity), [42]);
-    //     data.add([43, 42]);
-    //     assert.deepEqual(foo.top(Infinity), [42, 42]);
-    //     assert.deepEqual(bar.top(Infinity), [42, 42]);
-    //     foo.filterRange([42, 44]);
-    //     data.add([43]);
-    //     assert.deepEqual(foo.top(Infinity), [43, 43, 43, 42, 42]);
-    //     assert.deepEqual(bar.top(Infinity), [42, 42, 43, 43, 43]);
-    //     foo.filterFunction(function(d) { return d % 2 === 1; });
-    //     data.add([44, 44, 45]);
-    //     assert.deepEqual(foo.top(Infinity), [45, 43, 43, 43, 41]);
-    //     assert.deepEqual(bar.top(Infinity), [41, 43, 43, 43, 45]);
-    //     bar.filterExact([-43]);
-    //     assert.deepEqual(bar.top(Infinity), [43, 43, 43]);
-    //     data.add([43]);
-    //     assert.deepEqual(bar.top(Infinity), [43, 43, 43, 43]);
-    //     bar.filterAll();
-    //     data.add([0]);
-    //     assert.deepEqual(bar.top(Infinity), [41, 43, 43, 43, 43, 45]);
-    //     foo.filterAll();
-    //     assert.deepEqual(bar.top(Infinity), [0, 41, 42, 42, 43, 43, 43, 43, 44, 44, 45]);
-    //   });
-    //   it("existing groups are consistent with new records", function() {
-    //     var data = promisefilter([]),
-    //         foo = data.dimension(function(d) { return +d; }),
-    //         bar = data.dimension(function(d) { return -d; }),
-    //         foos = foo.group(),
-    //         all = data.groupAll();
-    //     assert.equal(all.value(), 0);
-    //     assert.deepEqual(foos.all(), []);
-    //     foo.filterExact(42);
-    //     data.add([43, 42, 41]);
-    //     assert.equal(all.value(), 1);
-    //     assert.deepEqual(foos.all(), [{key: 41, value: 1}, {key: 42, value: 1}, {key: 43, value: 1}]);
-    //     bar.filterExact(-42);
-    //     assert.equal(all.value(), 1);
-    //     assert.deepEqual(foos.all(), [{key: 41, value: 0}, {key: 42, value: 1}, {key: 43, value: 0}]);
-    //     data.add([43, 42, 41]);
-    //     assert.equal(all.value(), 2);
-    //     assert.deepEqual(foos.all(), [{key: 41, value: 0}, {key: 42, value: 2}, {key: 43, value: 0}]);
-    //     bar.filterAll();
-    //     assert.equal(all.value(), 2);
-    //     assert.deepEqual(foos.all(), [{key: 41, value: 2}, {key: 42, value: 2}, {key: 43, value: 2}]);
-    //     foo.filterAll();
-    //     assert.equal(all.value(), 6);
-    //   });
-    //   it("can add new groups that are before existing groups", function() {
-    //     var data = promisefilter(),
-    //         foo = data.dimension(function(d) { return +d; }),
-    //         foos = foo.group().reduce(add, remove, initial).order(order);
-    //     data.add([2]).add([1, 1, 1]);
-    //     assert.deepEqual(foos.top(2), [{key: 1, value: {foo: 3}}, {key: 2, value: {foo: 1}}]);
-    //     function order(p) { return p.foo; }
-    //     function add(p, v) { ++p.foo; return p; }
-    //     function remove(p, v) { --p.foo; return p; }
-    //     function initial() { return {foo: 0}; }
-    //   });
-    //   it("can add more than 256 groups", function() {
-    //     var data = promisefilter(),
-    //         foo = data.dimension(function(d) { return +d; }),
-    //         bar = data.dimension(function(d) { return +d; }),
-    //         foos = foo.group();
-    //     data.add(d3.range(0, 256));
-    //     assert.deepEqual(foos.all().then(function (a) { return a.map(function(d) { return d.key; }); }), d3.range(0, 256));
-    //     assert.isTrue(foos.all().then(function(a) { return a.every(function(d) { return d.value == 1; }); }));
-    //     data.add([128]);
-    //     assert.deepEqual(foos.top(1), [{key: 128, value: 2}]);
-    //     bar.filterExact(0);
-    //     data.add(d3.range(-256, 0));
-    //     assert.deepEqual(foos.all().then(function (a) { return a.map(function(d) { return d.key; }); }), d3.range(-256, 256));
-    //     assert.deepEqual(foos.top(1), [{key: 0, value: 1}]);
-    //   });
-    //   it("can add lots of groups in reverse order", function() {
-    //     var data = promisefilter(),
-    //         foo = data.dimension(function(d) { return -d.foo; }),
-    //         bar = data.dimension(function(d) { return d.bar; }),
-    //         foos = foo.group(Math.floor).reduceSum(function(d) { return d.foo; });
-    //     bar.filterExact(1);
-    //     for (var i = 0; i < 1000; i++) {
-    //       data.add(d3.range(10).map(function(d) {
-    //         return {foo: i + d / 10, bar: i % 4, baz: d + i * 10};
-    //       }));
-    //     }
-    //     assert.deepEqual(foos.top(1), [{key: -998, value: 8977.5}]);
-    //   });
-    // });
-    // describe("remove", function() {
-    //   var data;
-    //   beforeEach(function() {
-    //     data = promisefilter();
-    //     data.foo = data.dimension(function(d) { return d.foo; });
-    //     data.foo.div2 = data.foo.group(function(value) { return Math.floor(value / 2); });
-    //     data.foo.positive = data.foo.group(function(value) { return value > 0 | 0; });
-    //   });
-    //   it("removing a record works for a group with cardinality one", function() {
-    //     data.add([{foo: 1}, {foo: 1.1}, {foo: 1.2}]);
-    //     data.foo.filter(1.1);
-    //     data.remove();
-    //     data.foo.filterAll();
-    //     data.remove();
-    //     assert.deepEqual(data.foo.top(Infinity), []);
-    //   });
-    //   it("removing a record works for another group with cardinality one", function() {
-    //     data.add([{foo: 0}, {foo: -1}]);
-    //     assert.deepEqual(data.foo.positive.all(), [{key: 0, value: 2}]);
-    //     data.foo.filter(0);
-    //     data.remove();
-    //     assert.deepEqual(data.foo.positive.all(), [{key: 0, value: 1}]);
-    //     data.foo.filterAll();
-    //     assert.deepEqual(data.foo.top(Infinity), [{foo: -1}]);
-    //     data.remove();
-    //     assert.deepEqual(data.foo.top(Infinity), []);
-    //   });
-    //   it("removing a record updates dimension", function() {
-    //     data.add([{foo: 1}, {foo: 2}]);
-    //     data.foo.filterExact(1);
-    //     data.remove();
-    //     data.foo.filterAll();
-    //     assert.deepEqual(data.foo.top(Infinity), [{foo: 2}]);
-    //     data.remove();
-    //     assert.deepEqual(data.foo.top(Infinity), []);
-    //   });
-    //   it("removing records updates group", function() {
-    //     data.add([{foo: 1}, {foo: 2}, {foo: 3}]);
-    //     assert.deepEqual(data.foo.top(Infinity), [{foo: 3}, {foo: 2}, {foo: 1}]);
-    //     assert.deepEqual(data.foo.div2.all(), [{key: 0, value: 1}, {key: 1, value: 2}]);
-    //     data.foo.filterRange([1, 3]);
-    //     data.remove();
-    //     data.foo.filterAll();
-    //     assert.deepEqual(data.foo.top(Infinity), [{foo: 3}]);
-    //     assert.deepEqual(data.foo.div2.all(), [{key: 1, value: 1}]);
-    //     data.remove();
-    //     assert.deepEqual(data.foo.top(Infinity), []);
-    //     assert.deepEqual(data.foo.div2.all(), []);
-    //   });
-    //   it("filtering works correctly after removing a record", function() {
-    //     data.add([{foo: 1}, {foo: 2}, {foo: 3}]);
-    //     data.foo.filter(2);
-    //     data.remove();
-    //     data.foo.filterAll();
-    //     assert.deepEqual(data.foo.top(Infinity), [{foo: 3}, {foo: 1}]);
-    //     data.remove();
-    //     assert.deepEqual(data.foo.top(Infinity), []);
-    //   });
-    // });
+    describe("add", function() {
+      it("increases the size of the promisefilter", function(done) {
+        var data = promisefilter([]);
+        assert.equal(data.size(), 0);
+        data.add([0, 1, 2, 3, 4, 5, 6, 6, 6, 7]);
+        assert.equal(data.size(), 10);
+        data.add([]);
+        assert.equal(data.size(), 10).then(done);
+      });
+      it("existing filters are consistent with new records", function(done) {
+        var data = promisefilter([]),
+            foo = data.dimension(function(d) { return +d; }),
+            bar = data.dimension(function(d) { return -d; });
+        assert.deepEqual(foo.top(Infinity), []);
+        foo.filterExact(42);
+        data.add([43, 42, 41]);
+        assert.deepEqual(foo.top(Infinity), [42]);
+        assert.deepEqual(bar.top(Infinity), [42]);
+        data.add([43, 42]);
+        assert.deepEqual(foo.top(Infinity), [42, 42]);
+        assert.deepEqual(bar.top(Infinity), [42, 42]);
+        foo.filterRange([42, 44]);
+        data.add([43]);
+        assert.deepEqual(foo.top(Infinity), [43, 43, 43, 42, 42]);
+        assert.deepEqual(bar.top(Infinity), [42, 42, 43, 43, 43]);
+        foo.filterFunction(function(d) { return d % 2 === 1; });
+        data.add([44, 44, 45]);
+        assert.deepEqual(foo.top(Infinity), [45, 43, 43, 43, 41]);
+        assert.deepEqual(bar.top(Infinity), [41, 43, 43, 43, 45]);
+        bar.filterExact([-43]);
+        assert.deepEqual(bar.top(Infinity), [43, 43, 43]);
+        data.add([43]);
+        assert.deepEqual(bar.top(Infinity), [43, 43, 43, 43]);
+        bar.filterAll();
+        data.add([0]);
+        assert.deepEqual(bar.top(Infinity), [41, 43, 43, 43, 43, 45]);
+        foo.filterAll();
+        assert.deepEqual(bar.top(Infinity), [0, 41, 42, 42, 43, 43, 43, 43, 44, 44, 45]).then(done);
+      });
+      it("existing groups are consistent with new records", function(done) {
+        var data = promisefilter([]),
+            foo = data.dimension(function(d) { return +d; }),
+            bar = data.dimension(function(d) { return -d; }),
+            foos = foo.group(),
+            all = data.groupAll();
+        assert.equal(all.value(), 0);
+        assert.deepEqual(foos.all(), []);
+        foo.filterExact(42);
+        data.add([43, 42, 41]);
+        assert.equal(all.value(), 1);
+        assert.deepEqual(foos.all(), [{key: 41, value: 1}, {key: 42, value: 1}, {key: 43, value: 1}]);
+        bar.filterExact(-42);
+        assert.equal(all.value(), 1);
+        assert.deepEqual(foos.all(), [{key: 41, value: 0}, {key: 42, value: 1}, {key: 43, value: 0}]);
+        data.add([43, 42, 41]);
+        assert.equal(all.value(), 2);
+        assert.deepEqual(foos.all(), [{key: 41, value: 0}, {key: 42, value: 2}, {key: 43, value: 0}]);
+        bar.filterAll();
+        assert.equal(all.value(), 2);
+        assert.deepEqual(foos.all(), [{key: 41, value: 2}, {key: 42, value: 2}, {key: 43, value: 2}]);
+        foo.filterAll();
+        assert.equal(all.value(), 6).then(done);
+      });
+      it("can add new groups that are before existing groups", function(done) {
+        var data = promisefilter(),
+            foo = data.dimension(function(d) { return +d; }),
+            foos = foo.group().reduce(add, remove, initial).order(order);
+        data.add([2]).add([1, 1, 1]);
+        assert.deepEqual(foos.top(2), [{key: 1, value: {foo: 3}}, {key: 2, value: {foo: 1}}]).then(done);
+        function order(p) { return p.foo; }
+        function add(p, v) { ++p.foo; return p; }
+        function remove(p, v) { --p.foo; return p; }
+        function initial() { return {foo: 0}; }
+      });
+      it("can add more than 256 groups", function(done) {
+        var data = promisefilter(),
+            foo = data.dimension(function(d) { return +d; }),
+            bar = data.dimension(function(d) { return +d; }),
+            foos = foo.group();
+        data.add(d3.range(0, 256));
+        assert.deepEqual(foos.all().then(function (a) { return a.map(function(d) { return d.key; }); }), d3.range(0, 256));
+        assert.isTrue(foos.all().then(function(a) { return a.every(function(d) { return d.value == 1; }); }));
+        data.add([128]);
+        assert.deepEqual(foos.top(1), [{key: 128, value: 2}]);
+        bar.filterExact(0);
+        data.add(d3.range(-256, 0));
+        assert.deepEqual(foos.all().then(function (a) { return a.map(function(d) { return d.key; }); }), d3.range(-256, 256));
+        assert.deepEqual(foos.top(1), [{key: 0, value: 1}]).then(done);
+      });
+      // Doesn't work with the async API due to lack of context
+      // it("can add lots of groups in reverse order", function(done) {
+      //   var data = promisefilter(),
+      //       foo = data.dimension(function(d) { return -d.foo; }),
+      //       bar = data.dimension(function(d) { return d.bar; }),
+      //       foos = foo.group(Math.floor).reduceSum(function(d) { return d.foo; });
+      //   bar.filterExact(1);
+      //   for (var i = 0; i < 1000; i++) {
+      //     data.add(d3.range(10).map(function(d) {
+      //       return {foo: i + d / 10, bar: i % 4, baz: d + i * 10};
+      //     }));
+      //   }
+      //   assert.deepEqual(foos.top(1), [{key: -998, value: 8977.5}]).then(done);
+      // });
+    });
+    describe("remove", function() {
+      var data;
+      beforeEach(function() {
+        data = promisefilter();
+        data.foo = data.dimension(function(d) { return d.foo; });
+        data.foo.div2 = data.foo.group(function(value) { return Math.floor(value / 2); });
+        data.foo.positive = data.foo.group(function(value) { return value > 0 | 0; });
+      });
+      it("removing a record works for a group with cardinality one", function(done) {
+        data.add([{foo: 1}, {foo: 1.1}, {foo: 1.2}]);
+        data.foo.filter(1.1);
+        data.remove();
+        data.foo.filterAll();
+        data.remove();
+        assert.deepEqual(data.foo.top(Infinity), []).then(done);
+      });
+      it("removing a record works for another group with cardinality one", function(done) {
+        data.add([{foo: 0}, {foo: -1}]);
+        assert.deepEqual(data.foo.positive.all(), [{key: 0, value: 2}]);
+        data.foo.filter(0);
+        data.remove();
+        assert.deepEqual(data.foo.positive.all(), [{key: 0, value: 1}]);
+        data.foo.filterAll();
+        assert.deepEqual(data.foo.top(Infinity), [{foo: -1}]);
+        data.remove();
+        assert.deepEqual(data.foo.top(Infinity), []).then(done);
+      });
+      it("removing a record updates dimension", function(done) {
+        data.add([{foo: 1}, {foo: 2}]);
+        data.foo.filterExact(1);
+        data.remove();
+        data.foo.filterAll();
+        assert.deepEqual(data.foo.top(Infinity), [{foo: 2}]);
+        data.remove();
+        assert.deepEqual(data.foo.top(Infinity), []).then(done);
+      });
+      it("removing records updates group", function(done) {
+        data.add([{foo: 1}, {foo: 2}, {foo: 3}]);
+        assert.deepEqual(data.foo.top(Infinity), [{foo: 3}, {foo: 2}, {foo: 1}]);
+        assert.deepEqual(data.foo.div2.all(), [{key: 0, value: 1}, {key: 1, value: 2}]);
+        data.foo.filterRange([1, 3]);
+        data.remove();
+        data.foo.filterAll();
+        assert.deepEqual(data.foo.top(Infinity), [{foo: 3}]);
+        assert.deepEqual(data.foo.div2.all(), [{key: 1, value: 1}]);
+        data.remove();
+        assert.deepEqual(data.foo.top(Infinity), []);
+        assert.deepEqual(data.foo.div2.all(), []).then(done);
+      });
+      it("filtering works correctly after removing a record", function(done) {
+        data.add([{foo: 1}, {foo: 2}, {foo: 3}]);
+        data.foo.filter(2);
+        data.remove();
+        data.foo.filterAll();
+        assert.deepEqual(data.foo.top(Infinity), [{foo: 3}, {foo: 1}]);
+        data.remove();
+        assert.deepEqual(data.foo.top(Infinity), []).then(done);
+      });
+    });
+  });
 });
 
 function key(d) {

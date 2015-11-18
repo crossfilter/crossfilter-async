@@ -208,7 +208,9 @@ var cfFacade = function(data) {
 			var dimIndex = cfIndex.then(function(idx) { return opfilter["dimension"](idx, accessor.toString()); });
 			return {
 				dispose: function() {
-					return dimIndex.then(function(idx) { return opfilter["dimension.dispose"](idx); })
+					var p = Promise.all([dimIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.dispose"](idx[0]); });
+					updateSynchronizer = Promise.all([updateSynchronizer, p]);
+					return p;
 				},
 				groupAll: function() {
 					var dimGaIndex = dimIndex.then(function(idx) { return opfilter["dimension.groupAll"](idx); });
