@@ -221,24 +221,29 @@ var cfFacade = function(data) {
 							return p;
 						},
 						reduceSum: function(accessor) {
-							dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.reduceSum"](idx, accessor.toString()); });
+							var p = Promise.all([dimGaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.groupAll.reduceSum"](idx[0], accessor.toString()); });
+							updateSynchronizer = Promise.all([updateSynchronizer, p]);
 							return this;
 						},
 						reduceCount: function() {
-							dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.reduceCount"](idx); });
+							var p = Promise.all([dimGaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.groupAll.reduceCount"](idx[0]); });
+							updateSynchronizer = Promise.all([updateSynchronizer, p]);
 							return this;
 						},
 						reduce: function(add, remove, initial) {
-							dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.reduce"](idx, add.toString(), remove.toString(), initial.toString()); });
+							var p = Promise.all([dimGaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.groupAll.reduce"](idx[0], add.toString(), remove.toString(), initial.toString()); });
+							updateSynchronizer = Promise.all([updateSynchronizer, p]);
 							return this;
 						},
 						dispose: function() {
-							return dimGaIndex.then(function(idx) { return opfilter["dimension.groupAll.dispose"](idx); });
+							var p = Promise.all([dimGaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.groupAll.dispose"](idx[0]); });
+							updateSynchronizer = Promise.all([updateSynchronizer, p]);
+							return p;
 						}
 					}
 				},
 				group: function(accessor) {
-					var dimGroupIndex = dimIndex.then(function(idx) { return opfilter["dimension.group"](idx, accessor.toString()); });
+					var dimGroupIndex = dimIndex.then(function(idx) { return opfilter["dimension.group"](idx, accessor ? accessor.toString() : (function(d) { return d; }).toString() ); });
 					return {
 						top: function(value) {
 							var p = Promise.all([dimGroupIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.group.top"](idx[0], value); });
@@ -254,27 +259,34 @@ var cfFacade = function(data) {
 							return dimGroupIndex.then(function(idx) { return opfilter["dimension.group.size"](idx); });
 						},
 						reduceSum: function(accessor) {
-							dimGroupIndex.then(function(idx) { return opfilter["dimension.group.reduceSum"](idx, accessor.toString()); });
+							var p = Promise.all([dimGroupIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.group.reduceSum"](idx[0], accessor.toString()); });
+							updateSynchronizer = Promise.all([updateSynchronizer, p]);
 							return this;
 						},
 						reduceCount: function() {
-							dimGroupIndex.then(function(idx) { return opfilter["dimension.group.reduceCount"](idx); });
+							var p = Promise.all([dimGroupIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.group.reduceCount"](idx[0]); });
+							updateSynchronizer = Promise.all([updateSynchronizer, p]);
 							return this;
 						},
 						reduce: function(add, remove, initial) {
-							dimGroupIndex.then(function(idx) { return opfilter["dimension.group.reduce"](idx, add.toString(), remove.toString(), initial.toString()); });
+							var p = Promise.all([dimGroupIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.group.reduce"](idx[0], add.toString(), remove.toString(), initial.toString()); });
+							updateSynchronizer = Promise.all([updateSynchronizer, p]);
 							return this;
 						},
 						order: function(accessor) {
-							dimGroupIndex.then(function(idx) { return opfilter["dimension.group.order"](idx, accessor.toString()); });
+							var p = Promise.all([dimGroupIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.group.order"](idx[0], accessor.toString()); });
+							updateSynchronizer = Promise.all([updateSynchronizer, p]);
 							return this;
 						},
 						orderNatural: function() {
-							dimGroupIndex.then(function(idx) { return opfilter["dimension.group.orderNatural"](idx); });
+							var p = Promise.all([dimGroupIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.group.orderNatural"](idx[0]); });
+							updateSynchronizer = Promise.all([updateSynchronizer, p]);
 							return this;
 						},
 						dispose: function() {
-							return dimGroupIndex.then(function(idx) { return opfilter["dimension.group.dispose"](idx); });
+							var p = Promise.all([dimGroupIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["dimension.group.dispose"](idx[0]); });
+							updateSynchronizer = Promise.all([updateSynchronizer, p]);
+							return p;
 						}
 					};
 				},
@@ -325,19 +337,24 @@ var cfFacade = function(data) {
 					return p;
 				},
 				reduceSum: function(accessor) {
-					gaIndex.then(function(idx) { opfilter["groupAll.reduceSum"](idx, accessor.toString()); });
+					var p = Promise.all([gaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { opfilter["groupAll.reduceSum"](idx[0], accessor.toString()); });
+					updateSynchronizer = Promise.all([updateSynchronizer, p]);
 					return this;
 				},
 				reduceCount: function() {
-					gaIndex.then(function(idx) { opfilter["groupAll.reduceCount"](idx); });
+					var p = Promise.all([gaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { opfilter["groupAll.reduceCount"](idx[0]); });
+					updateSynchronizer = Promise.all([updateSynchronizer, p]);
 					return this;
 				},
 				reduce: function(add, remove, initial) {
-					gaIndex.then(function(idx) { opfilter["groupAll.reduce"](idx, add.toString(), remove.toString(), initial.toString()) });;
+					var p = Promise.all([gaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { opfilter["groupAll.reduce"](idx[0], add.toString(), remove.toString(), initial.toString()) });;
+					updateSynchronizer = Promise.all([updateSynchronizer, p]);
 					return this;
 				},
 				dispose: function() {
-					return gaIndex.then(function(idx) { return opfilter["groupAll.dispose"](idx); });
+					var p = Promise.all([gaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) { return opfilter["groupAll.dispose"](idx[0]); });
+					updateSynchronizer = Promise.all([updateSynchronizer, p]);
+					return p;
 				}
 			}
 		},

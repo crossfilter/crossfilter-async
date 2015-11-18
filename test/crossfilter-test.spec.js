@@ -612,7 +612,7 @@ describe("promisefilter", function() {
             data.total.filter(null).then(done);
           }
         });
-        // NOT SUPPORTED IN ASYNC MODE
+        // NOT SUPPORTED IN ASYNC MODE (yet)
         // it("is equivalent to filterFunction when passed a function", function(done) {
         //   try {
         //     data.total.filter(function(d) { return d % 2; });
@@ -629,229 +629,232 @@ describe("promisefilter", function() {
         });
       });
 
-    //   describe("groupAll (count, the default)", function() {
-    //     beforeEach(function() {
-    //       data.quantity.count = data.quantity.groupAll();
-    //     });
+      describe("groupAll (count, the default)", function() {
+        beforeEach(function() {
+          data.quantity.count = data.quantity.groupAll();
+        });
 
-    //     it("does not have top and order methods", function() {
-    //       assert.isFalse("top" in data.quantity.count);
-    //       assert.isFalse("order" in data.quantity.count);
-    //     });
+        it("does not have top and order methods", function(done) {
+          assert.isFalse("top" in data.quantity.count);
+          assert.isFalse("order" in data.quantity.count).then(done);
+        });
 
-    //     describe("reduce", function() {
-    //       it("reduces by add, remove, and initial", function() {
-    //         try {
-    //           data.quantity.count.reduce(
-    //               function(p, v) { return p + v.total; },
-    //               function(p, v) { return p - v.total; },
-    //               function() { return 0; });
-    //           assert.strictEqual(data.quantity.count.value(), 6660);
-    //         } finally {
-    //           data.quantity.count.reduceCount();
-    //         }
-    //       });
-    //     });
+        describe("reduce", function() {
+          it("reduces by add, remove, and initial", function(done) {
+            try {
+              data.quantity.count.reduce(
+                  function(p, v) { return p + v.total; },
+                  function(p, v) { return p - v.total; },
+                  function() { return 0; });
+              assert.strictEqual(data.quantity.count.value(), 6660);
+            } finally {
+              data.quantity.count.reduceCount();
+              data.quantity.filterAll().then(done);
+            }
+          });
+        });
 
-    //     describe("reduceCount", function() {
-    //       it("reduces by count", function() {
-    //         data.quantity.count.reduceSum(function(d) { return d.total; });
-    //         assert.strictEqual(data.quantity.count.value(), 6660);
-    //         data.quantity.count.reduceCount();
-    //         assert.strictEqual(data.quantity.count.value(), 43);
-    //       });
-    //     });
+        describe("reduceCount", function() {
+          it("reduces by count", function(done) {
+            data.quantity.count.reduceSum(function(d) { return d.total; });
+            assert.strictEqual(data.quantity.count.value(), 6660);
+            data.quantity.count.reduceCount();
+            assert.strictEqual(data.quantity.count.value(), 43).then(done);
+          });
+        });
 
-    //     describe("reduceSum", function() {
-    //       it("reduces by sum of accessor function", function() {
-    //         try {
-    //           data.quantity.count.reduceSum(function(d) { return d.total; });
-    //           assert.strictEqual(data.quantity.count.value(), 6660);
-    //           data.quantity.count.reduceSum(function() { return 1; });
-    //           assert.strictEqual(data.quantity.count.value(), 43);
-    //         } finally {
-    //           data.quantity.count.reduceCount();
-    //         }
-    //       });
-    //     });
+        describe("reduceSum", function() {
+          it("reduces by sum of accessor function", function(done) {
+            try {
+              data.quantity.count.reduceSum(function(d) { return d.total; });
+              assert.strictEqual(data.quantity.count.value(), 6660);
+              data.quantity.count.reduceSum(function() { return 1; });
+              assert.strictEqual(data.quantity.count.value(), 43);
+            } finally {
+              data.quantity.count.reduceCount();
+              data.quantity.filterAll().then(done);
+            }
+          });
+        });
 
-    //     describe("value", function() {
-    //       it("returns the count of matching records", function() {
-    //         assert.strictEqual(data.quantity.count.value(), 43);
-    //       });
-    //       it("does not observe the associated dimension's filters", function() {
-    //         try {
-    //           data.quantity.filterRange([100, 200]);
-    //           assert.strictEqual(data.quantity.count.value(), 43);
-    //         } finally {
-    //           data.quantity.filterAll();
-    //         }
-    //       });
-    //       it("observes other dimensions' filters", function() {
-    //         try {
-    //           data.type.filterExact("tab");
-    //           assert.strictEqual(data.quantity.count.value(), 32);
-    //           data.type.filterExact("visa");
-    //           assert.strictEqual(data.quantity.count.value(), 7);
-    //           data.tip.filterExact(100);
-    //           assert.strictEqual(data.quantity.count.value(), 5);
-    //         } finally {
-    //           data.type.filterAll();
-    //           data.tip.filterAll();
-    //         }
-    //       });
-    //     });
+        describe("value", function() {
+          it("returns the count of matching records", function(done) {
+            assert.strictEqual(data.quantity.count.value(), 43).then(done);
+          });
+          it("does not observe the associated dimension's filters", function(done) {
+            try {
+              data.quantity.filterRange([100, 200]);
+              assert.strictEqual(data.quantity.count.value(), 43);
+            } finally {
+              data.quantity.filterAll().then(done);
+            }
+          });
+          it("observes other dimensions' filters", function(done) {
+            try {
+              data.type.filterExact("tab");
+              assert.strictEqual(data.quantity.count.value(), 32);
+              data.type.filterExact("visa");
+              assert.strictEqual(data.quantity.count.value(), 7);
+              data.tip.filterExact(100);
+              assert.strictEqual(data.quantity.count.value(), 5);
+            } finally {
+              data.type.filterAll();
+              data.tip.filterAll().then(done);
+            }
+          });
+        });
 
-    //     describe("dispose", function() {
-    //       it("detaches from reduce listeners", function() {
-    //         var data = promisefilter([0, 1, 2]),
-    //             callback, // indicates a reduce has occurred in this group
-    //             dimension = data.dimension(function(d) { return d; }),
-    //             other = data.dimension(function(d) { return d; }),
-    //             all = dimension.groupAll().reduce(function() { callback = true; }, function() { callback = true; }, function() {});
-    //         all.value(); // force this group to be reduced when filters change
-    //         callback = false;
-    //         all.dispose();
-    //         other.filterRange([1, 2]);
-    //         assert.isFalse(callback);
-    //       });
-    //       it("detaches from add listeners", function() {
-    //         var data = promisefilter([0, 1, 2]),
-    //             callback, // indicates data has been added and triggered a reduce
-    //             dimension = data.dimension(function(d) { return d; }),
-    //             all = dimension.groupAll().reduce(function() { callback = true; }, function() { callback = true; }, function() {});
-    //         all.value(); // force this group to be reduced when data is added
-    //         callback = false;
-    //         all.dispose();
-    //         data.add([3, 4, 5]);
-    //         assert.isFalse(callback);
-    //       });
-    //     });
+        describe("dispose", function() {
+          it("detaches from reduce listeners", function(done) {
+            var data = promisefilter([0, 1, 2]),
+                callback, // indicates a reduce has occurred in this group
+                dimension = data.dimension(function(d) { return d; }),
+                other = data.dimension(function(d) { return d; }),
+                all = dimension.groupAll().reduce(function() { callback = true; }, function() { callback = true; }, function() {});
+            all.value(); // force this group to be reduced when filters change
+            callback = false;
+            all.dispose();
+            other.filterRange([1, 2]);
+            assert.isFalse(callback).then(done);
+          });
+          it("detaches from add listeners", function(done) {
+            var data = promisefilter([0, 1, 2]),
+                callback, // indicates data has been added and triggered a reduce
+                dimension = data.dimension(function(d) { return d; }),
+                all = dimension.groupAll().reduce(function() { callback = true; }, function() { callback = true; }, function() {});
+            all.value(); // force this group to be reduced when data is added
+            callback = false;
+            all.dispose();
+            data.add([3, 4, 5]);
+            assert.isFalse(callback).then(done);
+          });
+        });
       });
 
-    //   describe("groupAll (sum of total)", function() {
-    //     beforeEach(function() {
-    //       data.quantity.total = data.quantity.groupAll().reduceSum(function(d) { return d.total; });
-    //     });
+      describe("groupAll (sum of total)", function() {
+        beforeEach(function() {
+          data.quantity.total = data.quantity.groupAll().reduceSum(function(d) { return d.total; });
+        });
 
-    //     it("does not have top and order methods", function() {
-    //       assert.isFalse("top" in data.quantity.total);
-    //       assert.isFalse("order" in data.quantity.total);
-    //     });
+        it("does not have top and order methods", function(done) {
+          assert.isFalse("top" in data.quantity.total);
+          assert.isFalse("order" in data.quantity.total).then(done);
+        });
 
-    //     describe("reduce", function() {
-    //       it("determines the computed reduce value", function() {
-    //         try {
-    //           data.quantity.total.reduce(
-    //               function(p) { return p + 1; },
-    //               function(p) { return p - 1; },
-    //               function() { return 0; });
-    //           assert.strictEqual(data.quantity.total.value(), 43);
-    //         } finally {
-    //           data.quantity.total.reduceSum(function(d) { return d.total; });
-    //         }
-    //       });
-    //     });
+        describe("reduce", function() {
+          it("determines the computed reduce value", function(done) {
+            try {
+              data.quantity.total.reduce(
+                  function(p) { return p + 1; },
+                  function(p) { return p - 1; },
+                  function() { return 0; });
+              assert.strictEqual(data.quantity.total.value(), 43);
+            } finally {
+              data.quantity.total.reduceSum(function(d) { return d.total; });
+              data.quantity.filterAll().then(done);
+            }
+          });
+        });
 
-    //     describe("value", function() {
-    //       it("returns the sum total of matching records", function() {
-    //         assert.strictEqual(data.quantity.total.value(), 6660);
-    //       });
-    //       it("does not observe the associated dimension's filters", function() {
-    //         try {
-    //           data.quantity.filterRange([100, 200]);
-    //           assert.strictEqual(data.quantity.total.value(), 6660);
-    //         } finally {
-    //           data.quantity.filterAll();
-    //         }
-    //       });
-    //       it("observes other dimensions' filters", function() {
-    //         try {
-    //           data.type.filterExact("tab");
-    //           assert.strictEqual(data.quantity.total.value(), 4760);
-    //           data.type.filterExact("visa");
-    //           assert.strictEqual(data.quantity.total.value(), 1400);
-    //           data.tip.filterExact(100);
-    //           assert.strictEqual(data.quantity.total.value(), 1000);
-    //         } finally {
-    //           data.type.filterAll();
-    //           data.tip.filterAll();
-    //         }
-    //       });
-    //     });
-    //   });
+        describe("value", function() {
+          it("returns the sum total of matching records", function(done) {
+            assert.strictEqual(data.quantity.total.value(), 6660).then(done);
+          });
+          it("does not observe the associated dimension's filters", function(done) {
+            try {
+              data.quantity.filterRange([100, 200]);
+              assert.strictEqual(data.quantity.total.value(), 6660);
+            } finally {
+              data.quantity.filterAll().then(done);
+            }
+          });
+          it("observes other dimensions' filters", function(done) {
+            try {
+              data.type.filterExact("tab");
+              assert.strictEqual(data.quantity.total.value(), 4760);
+              data.type.filterExact("visa");
+              assert.strictEqual(data.quantity.total.value(), 1400);
+              data.tip.filterExact(100);
+              assert.strictEqual(data.quantity.total.value(), 1000);
+            } finally {
+              data.type.filterAll();
+              data.tip.filterAll().then(done);
+            }
+          });
+        });
+      });
 
-    //   describe("group", function() {
-    //     beforeEach(function() {
-    //       data.date.hours = data.date.group(function(d) { d = new Date(+d); d.setHours(d.getHours(), 0, 0, 0); return d; });
-    //       data.type.types = data.type.group();
-    //     });
+      describe("group", function() {
+        beforeEach(function() {
+          data.date.hours = data.date.group(function(d) { d = new Date(+d); d.setHours(d.getHours(), 0, 0, 0); return d; });
+          data.type.types = data.type.group();
+        });
 
-    //     it("key defaults to value", function() {
-    //       assert.deepEqual(data.type.types.top(Infinity), [
-    //         {key: "tab", value: 32},
-    //         {key: "visa", value: 7},
-    //         {key: "cash", value: 4}
-    //       ]);
-    //     });
+        it("key defaults to value", function(done) {
+          assert.deepEqual(data.type.types.top(Infinity), [
+            {key: "tab", value: 32},
+            {key: "visa", value: 7},
+            {key: "cash", value: 4}
+          ]).then(done);
+        });
 
-    //     it("cardinality may be greater than 256", function() {
-    //       var data = promisefilter(d3.range(256).concat(256, 256)),
-    //           index = data.dimension(function(d) { return d; }),
-    //           indexes = index.group();
-    //       assert.deepEqual(index.top(2), [256, 256]);
-    //       assert.deepEqual(indexes.top(1), [{key: 256, value: 2}]);
-    //       assert.equal(indexes.size(), 257);
-    //     });
+        it("cardinality may be greater than 256", function(done) {
+          var data = promisefilter(d3.range(256).concat(256, 256)),
+              index = data.dimension(function(d) { return d; }),
+              indexes = index.group();
+          assert.deepEqual(index.top(2), [256, 256]);
+          assert.deepEqual(indexes.top(1), [{key: 256, value: 2}]);
+          assert.equal(indexes.size(), 257).then(done);
+        });
 
-    //     it("cardinality may be greater than 65536", function() {
-    //       var data = promisefilter(d3.range(65536).concat(65536, 65536)),
-    //           index = data.dimension(function(d) { return d; }),
-    //           indexes = index.group();
-    //       assert.deepEqual(index.top(2), [65536, 65536]);
-    //       assert.deepEqual(indexes.top(1), [{key: 65536, value: 2}]);
-    //       assert.equal(indexes.size(), 65537);
-    //     });
+        it("cardinality may be greater than 65536", function(done) {
+          var data = promisefilter(d3.range(65536).concat(65536, 65536)),
+              index = data.dimension(function(d) { return d; }),
+              indexes = index.group();
+          assert.deepEqual(index.top(2), [65536, 65536]);
+          assert.deepEqual(indexes.top(1), [{key: 65536, value: 2}]);
+          assert.equal(indexes.size(), 65537).then(done);
+        });
 
-    //     it("adds all records before removing filtered", function() {
-    //       try {
-    //         data.quantity.filter(1);
-    //         // Group only adds
-    //         var addGroup = data.type.group().reduce(
-    //             function(p, v) {
-    //               ++p;
-    //               return p;
-    //             }, function(p, v) {
-    //               return p;
-    //             }, function() {
-    //               return 0;
-    //             }
-    //           );
-    //         // Normal group
-    //         var stdGroup = data.type.group();
-    //         assert.isTrue(addGroup.top(1).then(function(a) { return a[0].value > stdGroup.top(1)[0].value; }));
-    //       } finally {
-    //         data.quantity.filterAll();
-    //       }
-    //     });
+        it("adds all records before removing filtered", function(done) {
+          try {
+            data.quantity.filter(1);
+            // Group only adds
+            var addGroup = data.type.group().reduce(
+                function(p, v) {
+                  ++p;
+                  return p;
+                }, function(p, v) {
+                  return p;
+                }, function() {
+                  return 0;
+                }
+              );
+            // Normal group
+            var stdGroup = data.type.group();
+            assert.isTrue(addGroup.top(1).then(function(a) { return a[0].value > stdGroup.top(1)[0].value; }));
+          } finally {
+            data.quantity.filterAll().then(done);
+          }
+        });
 
-    //     describe("size", function() {
-    //       it("returns the cardinality", function() {
-    //         assert.equal(data.date.hours.size(), 8);
-    //         assert.equal(data.type.types.size(), 3);
-    //       });
-    //       it("ignores any filters", function() {
-    //         try {
-    //           data.type.filterExact("tab");
-    //           data.quantity.filterRange([100, 200]);
-    //           assert.equal(data.date.hours.size(), 8);
-    //           assert.equal(data.type.types.size(), 3);
-    //         } finally {
-    //           data.quantity.filterAll();
-    //           data.type.filterAll();
-    //         }
-    //       });
-    //     });
+        describe("size", function() {
+          it("returns the cardinality", function(done) {
+            assert.equal(data.date.hours.size(), 8);
+            assert.equal(data.type.types.size(), 3).then(done);
+          });
+          it("ignores any filters", function(done) {
+            try {
+              data.type.filterExact("tab");
+              data.quantity.filterRange([100, 200]);
+              assert.equal(data.date.hours.size(), 8);
+              assert.equal(data.type.types.size(), 3);
+            } finally {
+              data.quantity.filterAll();
+              data.type.filterAll().then(done);
+            }
+          });
+        });
 
     //     describe("reduce", function() {
     //       it("defaults to count", function() {
@@ -999,7 +1002,7 @@ describe("promisefilter", function() {
     //         assert.isFalse(callback);
     //       });
     //     });
-    //   });
+      });
 
     //   describe("dispose", function() {
     //     it("detaches from add listeners", function() {
@@ -1049,7 +1052,7 @@ describe("promisefilter", function() {
     //       assert.deepEqual(g2.all(), [{key: 0, value: 2}, {key: 2, value: 2}]);
     //     });
     //   });
-    // });
+    });
 
     // describe("groupAll", function() {
     //   beforeEach(function() {
