@@ -23,7 +23,9 @@ var opfilter = operative({
       evalStr += context;
     }
     evalStr += "internal = " + func;
+    /* jshint evil:true */
     eval(evalStr);
+    /* jshint evil:false */
     return internal;
   },
   "crossfilters": {},
@@ -202,11 +204,11 @@ var readSynchronizer = Promise.resolve();
 var updateSynchronizer = Promise.resolve();
 
 var cfFacade = function(data) {
-  var cfIndex = opfilter.new(data);
+  var cfIndex = opfilter['new'](data);
   return {
     dimension: function(accessor) {
       var dimIndex = cfIndex.then(function(idx) {
-        return opfilter["dimension"](idx, accessor.toString());
+        return opfilter.dimension(idx, accessor.toString());
       });
       return {
         dispose: function() {
@@ -256,7 +258,7 @@ var cfFacade = function(data) {
               updateSynchronizer = Promise.all([updateSynchronizer, p]);
               return p;
             }
-          }
+          };
         },
         group: function(accessor) {
           var dimGroupIndex = dimIndex.then(function(idx) {
@@ -377,7 +379,7 @@ var cfFacade = function(data) {
           readSynchronizer = Promise.all([readSynchronizer, p]);
           return p;
         }
-      }
+      };
     },
     groupAll: function() {
       var gaIndex = cfIndex.then(function(idx) {
@@ -420,7 +422,7 @@ var cfFacade = function(data) {
           updateSynchronizer = Promise.all([updateSynchronizer, p]);
           return p;
         }
-      }
+      };
     },
     remove: function() {
       var p = Promise.all([cfIndex, readSynchronizer, updateSynchronizer]).then(function(idx) {
@@ -450,7 +452,7 @@ var cfFacade = function(data) {
     }
   };
 
-}
+};
 
 // var testing = operative({
 // test: function() {
