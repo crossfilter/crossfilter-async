@@ -1,4 +1,5 @@
 var gulp = require('gulp');
+var $ = require('gulp-load-plugins')();
 
 var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
@@ -35,7 +36,7 @@ gulp.task('bump', function(){
 
 // Watch Files For Changes
 gulp.task('watch', function() {
-    gulp.watch('./src/*.js', ['scripts']);
+    gulp.watch('./src/*.js', ['jshint', 'scripts']);
 });
 
 gulp.task('test', function (done) {
@@ -69,5 +70,13 @@ gulp.task('testWatch', function (done) {
   //   });
 });
 
+//Lint JavaScript
+gulp.task('jshint', function () {
+  return gulp.src('src/*')
+    .pipe($.jshint.extract()) // Extract JS from .html files
+    .pipe($.jshint())
+    .pipe($.jshint.reporter('jshint-stylish'));
+});
+
 gulp.task('default', ['scripts', 'testWatch', 'watch']);
-gulp.task('all', ['scripts', 'test']);
+gulp.task('all', ['jshint', 'scripts', 'test']);
