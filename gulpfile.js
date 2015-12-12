@@ -36,7 +36,7 @@ gulp.task('bump', function(){
 
 // Watch Files For Changes
 gulp.task('watch', function() {
-    gulp.watch('./src/*.js', ['jshint', 'scripts']);
+    gulp.watch('./src/*.js', ['jshint', 'jscs', 'scripts']);
 });
 
 gulp.task('test', function (done) {
@@ -78,5 +78,13 @@ gulp.task('jshint', function () {
     .pipe($.jshint.reporter('jshint-stylish'));
 });
 
+//JavaScript Code Style
+gulp.task('jscs', function () {
+  return gulp.src([
+      'src/*.js'
+    ])
+    .pipe($.jscs());
+});
+
 gulp.task('default', ['scripts', 'testWatch', 'watch']);
-gulp.task('all', ['jshint', 'scripts', 'test']);
+gulp.task('all', ['jshint', 'jscs', 'scripts', 'test']);
