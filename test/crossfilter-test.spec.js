@@ -46,10 +46,10 @@ var assert = {
   },
 }
 
-describe("promisefilter", function() {
+describe("crossfilterAsync", function() {
     var data;
     beforeEach(function() {
-      data = promisefilter([
+      data = crossfilterAsync([
         {date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
         {date: "2011-11-14T16:20:19Z", quantity: 2, total: 190, tip: 100, type: "tab"},
         {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"},
@@ -108,13 +108,13 @@ describe("promisefilter", function() {
     });
 
     it("up to 32 dimensions supported", function(done) {
-      var data = promisefilter([]);
+      var data = crossfilterAsync([]);
       for (var i = 0; i < 32; i++) data.dimension(function() { return 0; });
       done();
     });
 
     it("can add and remove 32 dimensions repeatedly", function(done) {
-      var data = promisefilter([]),
+      var data = crossfilterAsync([]),
           dimensions = [];
       for (var j = 0; j < 10; j++) {
         for (var i = 0; i < 32; i++) dimensions.push(data.dimension(function() { return 0; }));
@@ -126,7 +126,7 @@ describe("promisefilter", function() {
     describe("empty data", function() {
       var data;
       beforeEach(function() {
-        data = promisefilter([]);
+        data = crossfilterAsync([]);
         try {
           data.quantity = data.dimension(function(d) { return d.quantity; });
         } catch (e) {
@@ -214,7 +214,7 @@ describe("promisefilter", function() {
         describe("groupAll (custom reduce information lifecycle)", function() {
           var data;
           beforeEach(function() {
-            data = promisefilter();
+            data = crossfilterAsync();
             data.add([{foo: 1, val: 2}, {foo: 2, val: 2}, {foo: 3, val: 2}, {foo: 3, val: 2}]);
             data.foo = data.dimension(function(d) { return d.foo; });
             data.bar = data.dimension(function(d) { return d.foo; });
@@ -268,12 +268,12 @@ describe("promisefilter", function() {
     });
 
     // it("up to 64 dimensions supported", function() {
-    //   var data = promisefilter([]);
+    //   var data = crossfilterAsync([]);
     //   for (var i = 0; i < 64; i++) data.dimension(function() { return 0; });
     // });
 
     // it("can add and remove 64 dimensions repeatedly", function() {
-    //   var data = promisefilter([]),
+    //   var data = crossfilterAsync([]),
     //       dimensions = [];
     //   for (var j = 0; j < 10; j++) {
     //     for (var i = 0; i < 64; i++) dimensions.push(data.dimension(function() { return 0; }));
@@ -282,7 +282,7 @@ describe("promisefilter", function() {
     // });
 
     // it("filtering with more than 32 dimensions", function(done) {
-    //   var data = promisefilter();
+    //   var data = crossfilterAsync();
     //   var dims = {};
 
     //   for (var i = 0; i < 50; i++) {
@@ -706,7 +706,7 @@ describe("promisefilter", function() {
 
         describe("dispose", function() {
           it("detaches from reduce listeners", function(done) {
-            var data = promisefilter([0, 1, 2]),
+            var data = crossfilterAsync([0, 1, 2]),
                 callback, // indicates a reduce has occurred in this group
                 dimension = data.dimension(function(d) { return d; }),
                 other = data.dimension(function(d) { return d; }),
@@ -718,7 +718,7 @@ describe("promisefilter", function() {
             assert.isFalse(callback).then(done);
           });
           it("detaches from add listeners", function(done) {
-            var data = promisefilter([0, 1, 2]),
+            var data = crossfilterAsync([0, 1, 2]),
                 callback, // indicates data has been added and triggered a reduce
                 dimension = data.dimension(function(d) { return d; }),
                 all = dimension.groupAll().reduce(function() { callback = true; }, function() { callback = true; }, function() {});
@@ -799,7 +799,7 @@ describe("promisefilter", function() {
         });
 
         it("cardinality may be greater than 256", function(done) {
-          var data = promisefilter(d3.range(256).concat(256, 256)),
+          var data = crossfilterAsync(d3.range(256).concat(256, 256)),
               index = data.dimension(function(d) { return d; }),
               indexes = index.group();
           assert.deepEqual(index.top(2), [256, 256]);
@@ -808,7 +808,7 @@ describe("promisefilter", function() {
         });
 
         it("cardinality may be greater than 65536", function(done) {
-          var data = promisefilter(d3.range(65536).concat(65536, 65536)),
+          var data = crossfilterAsync(d3.range(65536).concat(65536, 65536)),
               index = data.dimension(function(d) { return d; }),
               indexes = index.group();
           assert.deepEqual(index.top(2), [65536, 65536]);
@@ -876,7 +876,7 @@ describe("promisefilter", function() {
           describe("gives reduce functions information on lifecycle of data element", function() {
             var data;
             beforeEach(function() {
-              data = promisefilter();
+              data = crossfilterAsync();
               data.add([{foo: 1, val: 2}, {foo: 2, val: 2}, {foo: 3, val: 2}, {foo: 3, val: 2}]);
               data.foo = data.dimension(function(d) { return d.foo; });
               data.bar = data.dimension(function(d) { return d.foo; });
@@ -979,7 +979,7 @@ describe("promisefilter", function() {
         // This doesn't work with the async approach.
       //   describe("dispose", function() {
       //     it("detaches from reduce listeners", function(done) {
-      //       var data = promisefilter([0, 1, 2]),
+      //       var data = crossfilterAsync([0, 1, 2]),
       //           callback, // indicates a reduce has occurred in this group
       //           dimension = data.dimension(function(d) { return d; }),
       //           other = data.dimension(function(d) { return d; }),
@@ -993,7 +993,7 @@ describe("promisefilter", function() {
       //       assert.isFalse(callback).then(done);
       //     });
       //     it("detaches from add listeners", function(done) {
-      //       var data = promisefilter([0, 1, 2]),
+      //       var data = crossfilterAsync([0, 1, 2]),
       //           callback, // indicates data has been added and the group has been reduced
       //           dimension = data.dimension(function(d) { return d; }),
       //           group = dimension
@@ -1011,7 +1011,7 @@ describe("promisefilter", function() {
       describe("dispose", function() {
 // These tests with callbacks don't work in the async API
     //     it("detaches from add listeners", function() {
-    //       var data = promisefilter([0, 1, 2]),
+    //       var data = crossfilterAsync([0, 1, 2]),
     //           callback, // indicates a reduce has occurred in this group
     //           dimension = data.dimension(function(d) { callback = true; return d; });
     //       callback = false;
@@ -1020,7 +1020,7 @@ describe("promisefilter", function() {
     //       assert.isFalse(callback);
     //     });
     //     it("detaches groups from reduce listeners", function() {
-    //       var data = promisefilter([0, 1, 2]),
+    //       var data = crossfilterAsync([0, 1, 2]),
     //           callback, // indicates a reduce has occurred in this group
     //           dimension = data.dimension(function(d) { return d; }),
     //           other = data.dimension(function(d) { return d; }),
@@ -1034,7 +1034,7 @@ describe("promisefilter", function() {
     //       assert.isFalse(callback);
     //     });
     //     it("detaches groups from add listeners", function() {
-    //       var data = promisefilter([0, 1, 2]),
+    //       var data = crossfilterAsync([0, 1, 2]),
     //           callback, // indicates data has been added and the group has been reduced
     //           dimension = data.dimension(function(d) { return d; }),
     //           group = dimension
@@ -1047,7 +1047,7 @@ describe("promisefilter", function() {
     //       assert.isFalse(callback);
     //     });
         it("clears dimension filters from groups", function(done) {
-          var data = promisefilter([0, 0, 2, 2]),
+          var data = crossfilterAsync([0, 0, 2, 2]),
               d1 = data.dimension(function(d) { return -d; }),
               d2 = data.dimension(function(d) { return +d; }),
               g2 = d2.group(function(d) { return Math.round( d / 2 ) * 2; }),
@@ -1083,7 +1083,7 @@ describe("promisefilter", function() {
         describe("gives reduce functions information on lifecycle of data element", function() {
           var data;
           beforeEach(function() {
-            data = promisefilter();
+            data = crossfilterAsync();
             data.add([{foo: 1, val: 2}, {foo: 2, val: 2}, {foo: 3, val: 2}, {foo: 3, val: 2}]);
             data.foo = data.dimension(function(d) { return d.foo; });
             data.bar = data.dimension(function(d) { return d.foo; });
@@ -1157,7 +1157,7 @@ describe("promisefilter", function() {
       // These callback-based approaches don't work with the async API
     //   describe("dispose", function() {
     //     it("detaches from reduce listeners", function() {
-    //       var data = promisefilter([0, 1, 2]),
+    //       var data = crossfilterAsync([0, 1, 2]),
     //           callback, // indicates a reduce has occurred in this group
     //           other = data.dimension(function(d) { return d; }),
     //           all = data.groupAll().reduce(function() { callback = true; }, function() { callback = true; }, function() {});
@@ -1168,7 +1168,7 @@ describe("promisefilter", function() {
     //       assert.isFalse(callback);
     //     });
     //     it("detaches from add listeners", function() {
-    //       var data = promisefilter([0, 1, 2]),
+    //       var data = crossfilterAsync([0, 1, 2]),
     //           callback, // indicates data has been added and triggered a reduce
     //           all = data.groupAll().reduce(function() { callback = true; }, function() { callback = true; }, function() {});
     //       all.value(); // force this group to be reduced when data is added
@@ -1211,8 +1211,8 @@ describe("promisefilter", function() {
     });
 
     describe("add", function() {
-      it("increases the size of the promisefilter", function(done) {
-        var data = promisefilter([]);
+      it("increases the size of the crossfilterAsync", function(done) {
+        var data = crossfilterAsync([]);
         assert.equal(data.size(), 0);
         data.add([0, 1, 2, 3, 4, 5, 6, 6, 6, 7]);
         assert.equal(data.size(), 10);
@@ -1220,7 +1220,7 @@ describe("promisefilter", function() {
         assert.equal(data.size(), 10).then(done);
       });
       it("existing filters are consistent with new records", function(done) {
-        var data = promisefilter([]),
+        var data = crossfilterAsync([]),
             foo = data.dimension(function(d) { return +d; }),
             bar = data.dimension(function(d) { return -d; });
         assert.deepEqual(foo.top(Infinity), []);
@@ -1250,7 +1250,7 @@ describe("promisefilter", function() {
         assert.deepEqual(bar.top(Infinity), [0, 41, 42, 42, 43, 43, 43, 43, 44, 44, 45]).then(done);
       });
       it("existing groups are consistent with new records", function(done) {
-        var data = promisefilter([]),
+        var data = crossfilterAsync([]),
             foo = data.dimension(function(d) { return +d; }),
             bar = data.dimension(function(d) { return -d; }),
             foos = foo.group(),
@@ -1274,7 +1274,7 @@ describe("promisefilter", function() {
         assert.equal(all.value(), 6).then(done);
       });
       it("can add new groups that are before existing groups", function(done) {
-        var data = promisefilter(),
+        var data = crossfilterAsync(),
             foo = data.dimension(function(d) { return +d; }),
             foos = foo.group().reduce(add, remove, initial).order(order);
         data.add([2]).add([1, 1, 1]);
@@ -1285,7 +1285,7 @@ describe("promisefilter", function() {
         function initial() { return {foo: 0}; }
       });
       it("can add more than 256 groups", function(done) {
-        var data = promisefilter(),
+        var data = crossfilterAsync(),
             foo = data.dimension(function(d) { return +d; }),
             bar = data.dimension(function(d) { return +d; }),
             foos = foo.group();
@@ -1301,7 +1301,7 @@ describe("promisefilter", function() {
       });
       // Doesn't work with the async API due to lack of context
       // it("can add lots of groups in reverse order", function(done) {
-      //   var data = promisefilter(),
+      //   var data = crossfilterAsync(),
       //       foo = data.dimension(function(d) { return -d.foo; }),
       //       bar = data.dimension(function(d) { return d.bar; }),
       //       foos = foo.group(Math.floor).reduceSum(function(d) { return d.foo; });
@@ -1317,7 +1317,7 @@ describe("promisefilter", function() {
     describe("remove", function() {
       var data;
       beforeEach(function() {
-        data = promisefilter();
+        data = crossfilterAsync();
         data.foo = data.dimension(function(d) { return d.foo; });
         data.foo.div2 = data.foo.group(function(value) { return Math.floor(value / 2); });
         data.foo.positive = data.foo.group(function(value) { return value > 0 | 0; });

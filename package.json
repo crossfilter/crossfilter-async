@@ -1,14 +1,14 @@
 {
-  "name": "promisefilter",
+  "name": "crossfilter-async",
   "version": "1.0.0",
   "description": "An asynchronous Crossfilter wrapper",
-  "main": "./src/promisefilter.js",
+  "main": "./src/crossfilter-async.js",
   "scripts": {
     "test": "vows"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/crossfilter/promisefilter.git"
+    "url": "git+https://github.com/crossfilter/crossfilter-async.git"
   },
   "keywords": [
     "crossfilter",
@@ -19,9 +19,9 @@
   "author": "Ethan Jewett <ethan.jewett@coredatra.com>",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/crossfilter/promisefilter/issues"
+    "url": "https://github.com/crossfilter/crossfilter-async/issues"
   },
-  "homepage": "https://github.com/crossfilter/promisefilter#readme",
+  "homepage": "https://github.com/crossfilter/crossfilter-async#readme",
   "dependencies": {
     "crossfilter2": "^2.0.0-alpha.3",
     "operative": "^0.4.4"

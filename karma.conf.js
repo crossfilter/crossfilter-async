@@ -8,7 +8,7 @@ module.exports = function(config) {
 		'node_modules/operative/dist/operative.js',
 		'node_modules/crossfilter2/crossfilter.js',
 		'node_modules/d3/d3.min.js',
-		'promisefilter.js',
+		'crossfilter-async.js',
 		'test/*.js'
     ],
 
