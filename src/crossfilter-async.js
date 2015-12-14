@@ -1,209 +1,210 @@
 var operative = require('operative');
 
-var cfUrl = '/base/node_modules/crossfilter2/crossfilter.js';
+var cfFacade = function(data, cfUrl) {
+  
+  if(!cfUrl) cfUrl = 'crossfilter.js';
 
-// URL.createObjectURL
-// window.URL = window.URL || window.webkitURL;
-
-// var blob;
-// try {
-// blob = new Blob([function() {}.toString()], {type: 'application/javascript'});
-// } catch (e) { // Backwards-compatibility
-// window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
-// blob = new BlobBuilder();
-// blob.append(function() {}.toString());
-// blob = blob.getBlob();
-// }
-// var cfUrl = URL.createObjectURL(blob);
-
-var opfilter = operative({
-  "unpack": function unpackFunction(func, context) {
-    var internal, evalStr = "";
-    if (context) {
-      evalStr += context;
+  // URL.createObjectURL
+  // window.URL = window.URL || window.webkitURL;
+  
+  // var blob;
+  // try {
+  // blob = new Blob([function() {}.toString()], {type: 'application/javascript'});
+  // } catch (e) { // Backwards-compatibility
+  // window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+  // blob = new BlobBuilder();
+  // blob.append(function() {}.toString());
+  // blob = blob.getBlob();
+  // }
+  // var cfUrl = URL.createObjectURL(blob);
+  
+  var opfilter = operative({
+    "unpack": function unpackFunction(func, context) {
+      var internal, evalStr = "";
+      if (context) {
+        evalStr += context;
+      }
+      evalStr += "internal = " + func;
+      /* jshint evil:true */
+      eval(evalStr);
+      /* jshint evil:false */
+      return internal;
+    },
+    "crossfilters": {},
+    "crossfilterIndex": 0,
+    "dimensions": {},
+    "dimensionIndex": 0,
+    "groupAlls": {},
+    "groupAllIndex": 0,
+    "dimensionGroupAlls": {},
+    "dimensionGroupAllIndex": 0,
+    "dimensionGroups": {},
+    "dimensionGroupIndex": 0,
+    "new": function(data) {
+      if (data) {
+        this.crossfilters[this.crossfilterIndex] = crossfilter(data);
+      } else {
+        this.crossfilters[this.crossfilterIndex] = crossfilter([]);
+      }
+      var oldIndex = this.crossfilterIndex;
+      this.crossfilterIndex++;
+      this.deferred().fulfill(oldIndex);
+    },
+    "dimension": function(index, accessor) {
+      var promise = this.deferred();
+      this.dimensions[this.dimensionIndex] = this.crossfilters[index].dimension(this.unpack(accessor));
+      var oldIndex = this.dimensionIndex;
+      this.dimensionIndex++;
+      promise.fulfill(oldIndex);
+    },
+    "dimension.dispose": function(index) {
+      this.dimensions[index].dispose();
+      this.deferred().fulfill();
+    },
+    "dimension.groupAll": function(index) {
+      this.dimensionGroupAlls[this.dimensionGroupAllIndex] = this.dimensions[index].groupAll();
+      var oldIndex = this.dimensionGroupAllIndex;
+      this.dimensionGroupAllIndex++;
+      this.deferred().fulfill(oldIndex);
+    },
+    "dimension.groupAll.value": function(index) {
+      var value = this.dimensionGroupAlls[index].value();
+      this.deferred().fulfill(value);
+    },
+    "dimension.groupAll.reduceSum": function(index, accessor) {
+      this.dimensionGroupAlls[index].reduceSum(this.unpack(accessor));
+      this.deferred().fulfill();
+    },
+    "dimension.groupAll.reduceCount": function(index) {
+      this.dimensionGroupAlls[index].reduceCount();
+      this.deferred().fulfill();
+    },
+    "dimension.groupAll.reduce": function(index, add, remove, initial) {
+      this.dimensionGroupAlls[index].reduce(this.unpack(add), this.unpack(remove), this.unpack(initial));
+      this.deferred().fulfill();
+    },
+    "dimension.groupAll.dispose": function(index) {
+      this.dimensionGroupAlls[index].dispose();
+      this.deferred().fulfill();
+    },
+    "dimension.filterRange": function(index, range) {
+      this.dimensions[index].filterRange(range);
+      this.deferred().fulfill();
+    },
+    "dimension.filterExact": function(index, value) {
+      this.dimensions[index].filterExact(value);
+      this.deferred().fulfill();
+    },
+    "dimension.filterFunction": function(index, func) {
+      this.dimensions[index].filterFunction(this.unpack(func));
+      this.deferred().fulfill();
+    },
+    "dimension.filterAll": function(index) {
+      this.dimensions[index].filterAll();
+      this.deferred().fulfill();
+    },
+    "dimension.filter": function(index, value) {
+      this.dimensions[index].filter(value);
+      this.deferred().fulfill();
+    },
+    "dimension.top": function(index, value) {
+      var top = this.dimensions[index].top(value);
+      this.deferred().fulfill(top);
+    },
+    "dimension.bottom": function(index, value) {
+      var bottom = this.dimensions[index].bottom(value);
+      this.deferred().fulfill(bottom);
+    },
+    "dimension.group": function(index, accessor) {
+      this.dimensionGroups[this.dimensionGroupIndex] = this.dimensions[index].group(this.unpack(accessor));
+      var oldIndex = this.dimensionGroupIndex;
+      this.dimensionGroupIndex++;
+      this.deferred().fulfill(oldIndex);
+    },
+    "dimension.group.top": function(index, value) {
+      var top = this.dimensionGroups[index].top(value);
+      this.deferred().fulfill(top);
+    },
+    "dimension.group.all": function(index) {
+      var all = this.dimensionGroups[index].all();
+      this.deferred().fulfill(all);
+    },
+    "dimension.group.size": function(index) {
+      var size = this.dimensionGroups[index].size();
+      this.deferred().fulfill(size);
+    },
+    "dimension.group.reduce": function(index, add, remove, initial) {
+      this.dimensionGroups[index].reduce(this.unpack(add), this.unpack(remove), this.unpack(initial));
+      this.deferred().fulfill();
+    },
+    "dimension.group.order": function(index, accessor) {
+      this.dimensionGroups[index].order(this.unpack(accessor));
+      this.deferred().fulfill();
+    },
+    "dimension.group.orderNatural": function(index) {
+      this.dimensionGroups[index].orderNatural();
+      this.deferred().fulfill();
+    },
+    "dimension.group.reduceSum": function(index, accessor) {
+      this.dimensionGroups[index].reduceSum(this.unpack(accessor));
+      this.deferred().fulfill();
+    },
+    "dimension.group.reduceCount": function(index) {
+      this.dimensionGroups[index].reduceCount();
+      this.deferred().fulfill();
+    },
+    "dimension.group.dispose": function(index) {
+      this.dimensionGroups[index].dispose();
+      this.deferred().fulfill();
+    },
+    "groupAll": function(index) {
+      var promise = this.deferred();
+      this.groupAlls[this.groupAllIndex] = this.crossfilters[index].groupAll();
+      var oldIndex = this.groupAllIndex;
+      this.groupAllIndex++;
+      promise.fulfill(oldIndex);
+    },
+    "groupAll.value": function(index) {
+      var value = this.groupAlls[index].value();
+      this.deferred().fulfill(value);
+    },
+    "groupAll.reduceSum": function(index, accessor) {
+      this.groupAlls[index].reduceSum(this.unpack(accessor));
+      this.deferred().fulfill();
+    },
+    "groupAll.reduceCount": function(index) {
+      this.groupAlls[index].reduceCount();
+      this.deferred().fulfill();
+    },
+    "groupAll.reduce": function(index, add, remove, initial) {
+      this.groupAlls[index].reduce(this.unpack(add), this.unpack(remove), this.unpack(initial));
+      this.deferred().fulfill();
+    },
+    "groupAll.dispose": function(index) {
+      this.groupAlls[index].dispose();
+      this.deferred().fulfill();
+    },
+    "add": function(index, data) {
+      this.crossfilters[index].add(data);
+      this.deferred().fulfill();
+    },
+    "size": function(index) {
+      var size = this.crossfilters[index].size();
+      this.deferred().fulfill(size);
+    },
+    "all": function(index) {
+      var all = this.crossfilters[index].all();
+      this.deferred().fulfill(all);
+    },
+    "remove": function(index) {
+      this.crossfilters[index].remove();
+      this.deferred().fulfill();
     }
-    evalStr += "internal = " + func;
-    /* jshint evil:true */
-    eval(evalStr);
-    /* jshint evil:false */
-    return internal;
-  },
-  "crossfilters": {},
-  "crossfilterIndex": 0,
-  "dimensions": {},
-  "dimensionIndex": 0,
-  "groupAlls": {},
-  "groupAllIndex": 0,
-  "dimensionGroupAlls": {},
-  "dimensionGroupAllIndex": 0,
-  "dimensionGroups": {},
-  "dimensionGroupIndex": 0,
-  "new": function(data) {
-    if (data) {
-      this.crossfilters[this.crossfilterIndex] = crossfilter(data);
-    } else {
-      this.crossfilters[this.crossfilterIndex] = crossfilter([]);
-    }
-    var oldIndex = this.crossfilterIndex;
-    this.crossfilterIndex++;
-    this.deferred().fulfill(oldIndex);
-  },
-  "dimension": function(index, accessor) {
-    var promise = this.deferred();
-    this.dimensions[this.dimensionIndex] = this.crossfilters[index].dimension(this.unpack(accessor));
-    var oldIndex = this.dimensionIndex;
-    this.dimensionIndex++;
-    promise.fulfill(oldIndex);
-  },
-  "dimension.dispose": function(index) {
-    this.dimensions[index].dispose();
-    this.deferred().fulfill();
-  },
-  "dimension.groupAll": function(index) {
-    this.dimensionGroupAlls[this.dimensionGroupAllIndex] = this.dimensions[index].groupAll();
-    var oldIndex = this.dimensionGroupAllIndex;
-    this.dimensionGroupAllIndex++;
-    this.deferred().fulfill(oldIndex);
-  },
-  "dimension.groupAll.value": function(index) {
-    var value = this.dimensionGroupAlls[index].value();
-    this.deferred().fulfill(value);
-  },
-  "dimension.groupAll.reduceSum": function(index, accessor) {
-    this.dimensionGroupAlls[index].reduceSum(this.unpack(accessor));
-    this.deferred().fulfill();
-  },
-  "dimension.groupAll.reduceCount": function(index) {
-    this.dimensionGroupAlls[index].reduceCount();
-    this.deferred().fulfill();
-  },
-  "dimension.groupAll.reduce": function(index, add, remove, initial) {
-    this.dimensionGroupAlls[index].reduce(this.unpack(add), this.unpack(remove), this.unpack(initial));
-    this.deferred().fulfill();
-  },
-  "dimension.groupAll.dispose": function(index) {
-    this.dimensionGroupAlls[index].dispose();
-    this.deferred().fulfill();
-  },
-  "dimension.filterRange": function(index, range) {
-    this.dimensions[index].filterRange(range);
-    this.deferred().fulfill();
-  },
-  "dimension.filterExact": function(index, value) {
-    this.dimensions[index].filterExact(value);
-    this.deferred().fulfill();
-  },
-  "dimension.filterFunction": function(index, func) {
-    this.dimensions[index].filterFunction(this.unpack(func));
-    this.deferred().fulfill();
-  },
-  "dimension.filterAll": function(index) {
-    this.dimensions[index].filterAll();
-    this.deferred().fulfill();
-  },
-  "dimension.filter": function(index, value) {
-    this.dimensions[index].filter(value);
-    this.deferred().fulfill();
-  },
-  "dimension.top": function(index, value) {
-    var top = this.dimensions[index].top(value);
-    this.deferred().fulfill(top);
-  },
-  "dimension.bottom": function(index, value) {
-    var bottom = this.dimensions[index].bottom(value);
-    this.deferred().fulfill(bottom);
-  },
-  "dimension.group": function(index, accessor) {
-    this.dimensionGroups[this.dimensionGroupIndex] = this.dimensions[index].group(this.unpack(accessor));
-    var oldIndex = this.dimensionGroupIndex;
-    this.dimensionGroupIndex++;
-    this.deferred().fulfill(oldIndex);
-  },
-  "dimension.group.top": function(index, value) {
-    var top = this.dimensionGroups[index].top(value);
-    this.deferred().fulfill(top);
-  },
-  "dimension.group.all": function(index) {
-    var all = this.dimensionGroups[index].all();
-    this.deferred().fulfill(all);
-  },
-  "dimension.group.size": function(index) {
-    var size = this.dimensionGroups[index].size();
-    this.deferred().fulfill(size);
-  },
-  "dimension.group.reduce": function(index, add, remove, initial) {
-    this.dimensionGroups[index].reduce(this.unpack(add), this.unpack(remove), this.unpack(initial));
-    this.deferred().fulfill();
-  },
-  "dimension.group.order": function(index, accessor) {
-    this.dimensionGroups[index].order(this.unpack(accessor));
-    this.deferred().fulfill();
-  },
-  "dimension.group.orderNatural": function(index) {
-    this.dimensionGroups[index].orderNatural();
-    this.deferred().fulfill();
-  },
-  "dimension.group.reduceSum": function(index, accessor) {
-    this.dimensionGroups[index].reduceSum(this.unpack(accessor));
-    this.deferred().fulfill();
-  },
-  "dimension.group.reduceCount": function(index) {
-    this.dimensionGroups[index].reduceCount();
-    this.deferred().fulfill();
-  },
-  "dimension.group.dispose": function(index) {
-    this.dimensionGroups[index].dispose();
-    this.deferred().fulfill();
-  },
-  "groupAll": function(index) {
-    var promise = this.deferred();
-    this.groupAlls[this.groupAllIndex] = this.crossfilters[index].groupAll();
-    var oldIndex = this.groupAllIndex;
-    this.groupAllIndex++;
-    promise.fulfill(oldIndex);
-  },
-  "groupAll.value": function(index) {
-    var value = this.groupAlls[index].value();
-    this.deferred().fulfill(value);
-  },
-  "groupAll.reduceSum": function(index, accessor) {
-    this.groupAlls[index].reduceSum(this.unpack(accessor));
-    this.deferred().fulfill();
-  },
-  "groupAll.reduceCount": function(index) {
-    this.groupAlls[index].reduceCount();
-    this.deferred().fulfill();
-  },
-  "groupAll.reduce": function(index, add, remove, initial) {
-    this.groupAlls[index].reduce(this.unpack(add), this.unpack(remove), this.unpack(initial));
-    this.deferred().fulfill();
-  },
-  "groupAll.dispose": function(index) {
-    this.groupAlls[index].dispose();
-    this.deferred().fulfill();
-  },
-  "add": function(index, data) {
-    this.crossfilters[index].add(data);
-    this.deferred().fulfill();
-  },
-  "size": function(index) {
-    var size = this.crossfilters[index].size();
-    this.deferred().fulfill(size);
-  },
-  "all": function(index) {
-    var all = this.crossfilters[index].all();
-    this.deferred().fulfill(all);
-  },
-  "remove": function(index) {
-    this.crossfilters[index].remove();
-    this.deferred().fulfill();
-  }
-}, [cfUrl]);
-
-var readSynchronizer = Promise.resolve();
-var updateSynchronizer = Promise.resolve();
-
-var cfFacade = function(data) {
+  }, [cfUrl]);
+  
+  var readSynchronizer = Promise.resolve();
+  var updateSynchronizer = Promise.resolve();
+  
   var cfIndex = opfilter['new'](data);
   return {
     dimension: function(accessor) {
@@ -453,13 +454,5 @@ var cfFacade = function(data) {
   };
 
 };
-
-// var testing = operative({
-// test: function() {
-// this.deferred().fulfill("TESTING TESTING - THIS IS A RESULT");
-// }
-// })
-// alert("TESTING TESTING 123");
-// testing.test().then(function(d) { alert(d); })
 
 module.exports = cfFacade;
