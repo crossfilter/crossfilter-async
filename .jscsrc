@@ -1,0 +1,18 @@
+{
+  "preset": "google",
+  "disallowSpacesInAnonymousFunctionExpression": null,
+  "excludeFiles": ["node_modules/**"],
+  "additionalRules": [ "node_modules/jscs-trailing-whitespace-in-source/rules/*.js" ],
+  "disallowTrailingWhitespaceInSource": true,
+  "disallowTrailingWhitespace": null,
+  "maximumLineLength": 150,
+  "jsDoc": {
+    "checkAnnotations": {
+      "preset":"closurecompiler",
+      "extra": {
+        "callback": true,
+        "detail": true
+      }
+    }
+  }
+}
