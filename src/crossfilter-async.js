@@ -452,7 +452,9 @@ var cfFacade = function(data, cfUrl) {
       });
     }
   };
-
 };
+
+// Add Crossfilter facade
+
 
 module.exports = cfFacade;
