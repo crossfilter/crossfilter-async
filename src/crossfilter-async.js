@@ -202,11 +202,11 @@ var cfFacade = function(data, cfUrl) {
     }
   }, [cfUrl]);
   
-  var readSynchronizer = Promise.resolve();
-  var updateSynchronizer = Promise.resolve();
+  var readSynchronizer = Promise.all([]);
+  var updateSynchronizer = Promise.all([]);
   
   var cfIndex = opfilter['new'](data);
-  return {
+  var cfAsync = {
     dimension: function(accessor) {
       var dimIndex = cfIndex.then(function(idx) {
         return opfilter.dimension(idx, accessor.toString());
@@ -397,21 +397,21 @@ var cfFacade = function(data, cfUrl) {
         },
         reduceSum: function(accessor) {
           var p = Promise.all([gaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) {
-            opfilter["groupAll.reduceSum"](idx[0], accessor.toString());
+            return opfilter["groupAll.reduceSum"](idx[0], accessor.toString());
           });
           updateSynchronizer = Promise.all([updateSynchronizer, p]);
           return this;
         },
         reduceCount: function() {
           var p = Promise.all([gaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) {
-            opfilter["groupAll.reduceCount"](idx[0]);
+            return opfilter["groupAll.reduceCount"](idx[0]);
           });
           updateSynchronizer = Promise.all([updateSynchronizer, p]);
           return this;
         },
         reduce: function(add, remove, initial) {
           var p = Promise.all([gaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) {
-            opfilter["groupAll.reduce"](idx[0], add.toString(), remove.toString(), initial.toString());
+            return opfilter["groupAll.reduce"](idx[0], add.toString(), remove.toString(), initial.toString());
           });
           updateSynchronizer = Promise.all([updateSynchronizer, p]);
           return this;
@@ -452,9 +452,185 @@ var cfFacade = function(data, cfUrl) {
       });
     }
   };
+  
+  var callback = function() { };
+  
+  // Add Crossfilter facade
+  cfAsync.facade = {
+    dimension: function(accessor) {
+      var cfDimension = cfAsync.dimension(accessor);
+      return {
+        dispose: cfDimension.dispose,
+        groupAll: function() {
+          var cfGroupAll = cfDimension.groupAll();
+          var cachedValue = {};
+          return {
+            value: function() {
+              cfGroupAll.value().then(function(d){
+                cachedValue = d;
+              }).then(callback);
+              return cachedValue;
+            },
+            reduceSum: function(accessor) {
+              cfGroupAll.reduceSum(accessor);
+              return this;
+            },
+            reduceCount: function() {
+              cfGroupAll.reduceCount();
+              return this;
+            },
+            reduce: function(add, remove, initial) {
+              cfGroupAll.reduce(add, remove, initial);
+              return this;
+            },
+            dispose: function() {
+              cfGroupAll.dispose();
+            }
+          };
+        },
+        group: function(accessor) {
+          var cfGroup = cfDimension.group(accessor);
+          var cachedTop = [];
+          var cachedAll = [];
+          var cachedSize = 0;
+          return {
+            top: function(value) {
+              cfGroup.top(Infinity).then(function(d) {
+                cachedTop = d;
+              }).then(callback);
+              return cachedTop.slice(0,value);
+            },
+            all: function() {
+              cfGroup.all().then(function(d) {
+                cachedAll = d;
+              }).then(callback);
+              return cachedAll;
+            },
+            size: function() {
+              cfGroup.size().then(function(d) {
+                cachedSize = d;
+              }).then(callback);
+              return cachedSize;
+            },
+            reduceSum: function(accessor) {
+              cfGroup.reduceSum(accessor);
+              return this;
+            },
+            reduceCount: function() {
+              cfGroup.reduceCount();
+              return this;
+            },
+            reduce: function(add, remove, initial) {
+              cfGroup.reduce(add, remove, initial);
+              return this;
+            },
+            order: function(accessor) {
+              cfGroup.order(accessor);
+              return this;
+            },
+            orderNatural: function() {
+              cfGroup.orderNatural();
+              return this;
+            },
+            dispose: function() {
+              cfGroup.dispose();
+            }
+          };
+        },
+        filterRange: function(range) {
+          cfDimension.filterRange(range);
+        },
+        filterExact: function(value) {
+          cfDimension.filterExact(value);
+        },
+        filterFunction: function(func) {
+          cfDimension.filterFunction(func);
+        },
+        filterAll: function() {
+          cfDimension.filterAll();
+        },
+        filter: function(value) {
+          cfDimension.filter(value);
+        },
+        top: function(value) {
+          // TODO
+          // var p = Promise.all([dimIndex, readSynchronizer, updateSynchronizer]).then(function(idx) {
+          //   return opfilter["dimension.top"](idx[0], value);
+          // });
+          // readSynchronizer = Promise.all([readSynchronizer, p]);
+          // return p;
+        },
+        bottom: function(value) {
+          // TODO
+          // var p = Promise.all([dimIndex, readSynchronizer, updateSynchronizer]).then(function(idx) {
+          //   return opfilter["dimension.bottom"](idx[0], value);
+          // });
+          // readSynchronizer = Promise.all([readSynchronizer, p]);
+          // return p;
+        }
+      };
+    },
+    groupAll: function() {
+      var cfGroupAll = cfAsync.groupAll();
+
+      return {
+        value: function() {
+          // TODO
+          // var p = Promise.all([gaIndex, readSynchronizer, updateSynchronizer]).then(function(idx) {
+          //   return opfilter["groupAll.value"](idx[0]);
+          // });
+          // readSynchronizer = Promise.all([readSynchronizer, p]);
+          // return p;
+        },
+        reduceSum: function(accessor) {
+          cfGroupAll.reduceSum(accessor);
+          return this;
+        },
+        reduceCount: function() {
+          cfGroupAll.reduceCount();
+          return this;
+        },
+        reduce: function(add, remove, initial) {
+          cfGroupAll.reduct(add, remove, initial);
+          return this;
+        },
+        dispose: function() {
+          cfGroupAll.dispose();
+        }
+      };
+    },
+    remove: function() {
+      cfAsync.remove();
+      return this;
+    },
+    add: function(data) {
+      cfAsync.add(data);
+      return this;
+    },
+    size: function() {
+      // TODO
+      // var p = Promise.all([cfIndex, readSynchronizer, updateSynchronizer]).then(function(idx) {
+      //   return opfilter.size(idx[0]);
+      // });
+      // readSynchronizer = Promise.all([readSynchronizer, p]);
+      // return p;
+    },
+    all: function() {
+      // TODO
+      // return cfIndex.then(function(idx) {
+      //   return opfilter.all(idx);
+      // });
+    },
+    callback: function(cb) { 
+      if(cb) {
+        callback = cb;
+      } else {
+        return callback;
+      }
+    }
+  };
+  
+  return cfAsync;
 };
-
-// Add Crossfilter facade
-
 
 module.exports = cfFacade;
